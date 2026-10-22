@@ -252,7 +252,11 @@ function SessionRow(props: { sidebar: Controller; record: HomeSessionRecord; onN
     </>
   )
 
+  const id = () => props.record.session.id
+  const children = () => sidebar.children(id())
+
   return (
+    <>
     <Menu.Context modal={false}>
       <Menu.Context.Trigger
         as="div"
@@ -291,7 +295,19 @@ function SessionRow(props: { sidebar: Controller; record: HomeSessionRecord; onN
             {sessionLabel(props.record.session)}
           </span>
         </button>
-        <div class="absolute end-1 opacity-0 group-hover/row:opacity-100 focus-within:opacity-100">
+        <div class="absolute end-1 flex items-center">
+          <IconButton
+            type="button"
+            variant="ghost-muted"
+            size="small"
+            class="opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100"
+            classList={{ "opacity-100!": children().length > 0 }}
+            icon={<Icon name="chevron-down" style={{ transform: sidebar.isExpanded(id()) ? undefined : "rotate(-90deg)" }} />}
+            aria-expanded={sidebar.isExpanded(id())}
+            aria-label={t("sidebar.sessions.subagents")}
+            onClick={() => sidebar.toggleExpanded(id())}
+          />
+          <div class="opacity-0 group-hover/row:opacity-100 focus-within:opacity-100">
           <Menu modal={false} placement="bottom-end" gutter={2}>
             <Menu.Trigger
               as={IconButton}
@@ -305,11 +321,45 @@ function SessionRow(props: { sidebar: Controller; record: HomeSessionRecord; onN
               <Menu.Content onCloseAutoFocus={keepFocus}>{items()}</Menu.Content>
             </Menu.Portal>
           </Menu>
+          </div>
         </div>
       </Menu.Context.Trigger>
       <Menu.Context.Portal>
         <Menu.Context.Content onCloseAutoFocus={keepFocus}>{items()}</Menu.Context.Content>
       </Menu.Context.Portal>
     </Menu.Context>
+    <Show when={sidebar.isExpanded(id())}>
+      <div data-slot="sidebar-subagents" class="ms-5 flex flex-col border-s border-v2-border-border-base ps-1">
+        <Show
+          when={children().length > 0}
+          fallback={<div class="px-2 py-1 text-[12px] text-v2-text-text-faint">{t("sidebar.sessions.noSubagents")}</div>}
+        >
+          <For each={children()}>
+            {(child) => (
+              <button
+                type="button"
+                data-component="sidebar-subagent-row"
+                data-active={sidebar.active() === child.id}
+                class="flex h-7 min-w-0 items-center gap-2 rounded-[6px] px-2 text-start text-[12px] text-v2-text-text-muted hover:bg-v2-overlay-simple-overlay-hover data-[active=true]:bg-v2-overlay-simple-overlay-hover data-[active=true]:text-v2-text-text-base"
+                onClick={() => void sidebar.openByID(child.id)}
+              >
+                <span
+                  aria-hidden="true"
+                  class="size-1.5 shrink-0 rounded-full"
+                  classList={{
+                    "bg-v2-text-text-accent animate-pulse": sidebar.running(child.id),
+                    "bg-v2-text-text-faint": !sidebar.running(child.id),
+                  }}
+                />
+                <span dir="auto" class="min-w-0 flex-1 truncate">
+                  {sessionLabel(child)}
+                </span>
+              </button>
+            )}
+          </For>
+        </Show>
+      </div>
+    </Show>
+    </>
   )
 }

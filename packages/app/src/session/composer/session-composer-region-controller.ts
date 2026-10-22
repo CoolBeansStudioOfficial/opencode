@@ -4,6 +4,7 @@ import type { SessionRequestModel } from "../requests/model"
 export function createSessionComposerRegionController(input: {
   state: SessionRequestModel
   parentID: Accessor<string | undefined>
+  working: Accessor<boolean>
   centered: Accessor<boolean>
   onResponseSubmit: () => void
   openParent: () => void
@@ -18,7 +19,9 @@ export function createSessionComposerRegionController(input: {
     setPromptRef: input.setPromptRef,
     setDockRef: input.setDockRef,
     parentID: input.parentID,
-    child: () => !!input.parentID(),
+    // Fork: a running subagent session accepts steering messages; an idle one stays read-only so a follow-up
+    // cannot start work whose result never reaches the parent.
+    child: () => !!input.parentID() && !input.working(),
     showComposer: () => !input.state.blocked() || !!input.parentID(),
   }
 }

@@ -276,6 +276,7 @@ export function createActiveSessionRegion(input: {
   const dock = {
     state,
     parentID: input.session.data.parentID,
+    working: input.session.data.working,
     centered: input.screen.centered,
     onResponseSubmit: input.timeline.actions.resume,
     openParent,

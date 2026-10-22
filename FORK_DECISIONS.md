@@ -21,4 +21,6 @@ Judgment calls made while building the fork without the owner present. Each entr
 - **The push switch is per server** (Settings → server → Preferences) and only in the browser/PWA build; the desktop app keeps native notifications.
 - **Push was tested with a local fake push service**, not a real phone: the browser pane here can't register service workers. Encryption, VAPID signing and the permission trigger were verified end to end.
 - **Fixed a Windows bug in local builds**: the dev server indexed built web files with `\` paths, so the served web UI couldn't load its scripts.
+- **Subagent sessions nest under their parent in the sidebar** (expand with the chevron; the active subagent's parent expands automatically). A running subagent accepts steering messages from its own view; an idle one stays read-only, because a new prompt there would start work whose result never reaches the parent.
+- **New sessions in Git projects default to their own worktree** (Settings → Worktrees → default destination "New"), like Claude desktop. Upstream defaulted to the last used choice. The new-session screen still lets you pick Local or an existing worktree per session.
 - **Symlinked repo files are real copies on this PC** (Windows without Developer Mode). They are marked `skip-worktree`, so Git ignores local changes to them.

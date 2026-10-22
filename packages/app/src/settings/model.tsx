@@ -288,7 +288,8 @@ export const defaultSettings: Settings = {
   appearance: { fontSize: 14, mono: "", sans: "", terminal: "", tabLayout: "hidden" },
   keybinds: {},
   permissions: { autoApprove: false, autoApproveProjects: {} },
-  workspaces: { defaultDestination: "last-used", lastUsed: {} },
+  // Fork: like Claude desktop, each new session in a Git project gets its own worktree by default.
+  workspaces: { defaultDestination: "new", lastUsed: {} },
   notifications: { agent: true, permissions: true, errors: false },
   sounds: {
     agentEnabled: true,

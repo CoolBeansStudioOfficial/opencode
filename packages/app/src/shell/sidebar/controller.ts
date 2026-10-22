@@ -2,7 +2,7 @@ import type { SessionInfo } from "@opencode/client/promise"
 import { useLocation } from "@solidjs/router"
 import { skipToken, useQuery } from "@tanstack/solid-query"
 import { Schema } from "effect"
-import { createMemo, createSignal, startTransition } from "solid-js"
+import { createEffect, createMemo, createSignal, startTransition, untrack } from "solid-js"
 import { createHomeController } from "@/home/model"
 import { HOME_SESSION_LIMIT, loadHomeSessionIndex, mergeHomeSessionIndex, retainHomeSessions } from "@/home/sessions/index"
 import { buildHomeSessionRecords, homeProjectForSession, type HomeSessionRecord } from "@/home/sessions/records"
@@ -111,6 +111,37 @@ export function createSessionsSidebar() {
 
   const active = createMemo(() => location.pathname.match(/\/session\/([^/]+)/)?.[1])
 
+  // Subagent sessions nest under their parent. Expanding a row loads its children; the active session's
+  // parent expands on its own.
+  const [expanded, setExpanded] = createSignal<ReadonlySet<string>>(new Set())
+
+  const children = (sessionID: string) => {
+    const ctx = home.server.focusedContext()
+
+    if (!ctx) return []
+
+    return ctx.data.session
+      .list()
+      .filter((session) => session.parentID === sessionID && !session.time.archived)
+      .sort((a, b) => (b.time.updated ?? b.time.created) - (a.time.updated ?? a.time.created))
+  }
+
+  const loadChildren = (sessionID: string) =>
+    void home.server.focusedContext()?.data.session.sync(sessionID, { children: true }).catch(() => undefined)
+
+  createEffect(() => {
+    const id = active()
+    const ctx = home.server.focusedContext()
+
+    if (!id || !ctx) return
+    const root = ctx.data.session.root(id)
+
+    if (root === id) return
+    untrack(() => {
+      if (!expanded().has(root)) setExpanded(new Set([...expanded(), root]))
+    })
+  })
+
   const withoutKey = (item: string) => ({
     pinned: state.pinned.filter((value) => value !== item),
     groups: state.groups.map((group) => ({ ...group, sessions: group.sessions.filter((value) => value !== item) })),
@@ -126,6 +157,20 @@ export function createSessionsSidebar() {
     groups,
     recents,
     active,
+    children,
+    running: (sessionID: string) => home.server.focusedContext()?.data.session.status(sessionID) === "running",
+    isExpanded: (sessionID: string) => expanded().has(sessionID),
+    toggleExpanded: (sessionID: string) => {
+      const next = new Set(expanded())
+
+      if (next.has(sessionID)) next.delete(sessionID)
+      else {
+        next.add(sessionID)
+        loadChildren(sessionID)
+      }
+
+      setExpanded(next)
+    },
     isPinned: (record: HomeSessionRecord) => state.pinned.includes(key(record)),
     groupOf: (record: HomeSessionRecord) => state.groups.find((group) => group.sessions.includes(key(record)))?.id,
     toggleOpen: () => setState({ open: !state.open }),

@@ -668,6 +668,8 @@ export const dict = {
   "sidebar.sessions.unpin": "Unpin",
   "sidebar.sessions.moveToGroup": "Move to group",
   "sidebar.sessions.removeFromGroup": "Remove from group",
+  "sidebar.sessions.subagents": "Show subagents",
+  "sidebar.sessions.noSubagents": "No subagents",
   "sidebar.sessions.group.new": "New group",
   "sidebar.sessions.group.create": "New group",
   "sidebar.sessions.group.options": "Group options",

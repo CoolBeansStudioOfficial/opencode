@@ -107,7 +107,7 @@ describe("settings schema", () => {
       },
       keybinds: {},
       permissions: { autoApprove: false, autoApproveProjects: {} },
-      workspaces: { defaultDestination: "last-used", lastUsed: {} },
+      workspaces: { defaultDestination: "new", lastUsed: {} },
       notifications: { agent: true, permissions: true, errors: false },
       sounds: {
         agentEnabled: true,
