@@ -141,3 +141,33 @@ export function resolveArtifactPath(base: string, href: string) {
 
   return `${dir.startsWith("/") ? "/" : ""}${segments.join("/")}`
 }
+
+/** Fork: whether a file is a Markdown slide deck, rendered one slide at a time. */
+export function isSlideDeck(path: string) {
+  return path.toLowerCase().endsWith(".slides.md")
+}
+
+/** Splits a slide deck on lines holding only `---`, dropping empty slides. Code fences keep their `---` lines. */
+export function splitSlides(text: string) {
+  const slides: string[] = []
+  let current: string[] = []
+  let fence: string | undefined
+
+  for (const line of text.replace(/\r\n?/g, "\n").split("\n")) {
+    const marker = line.match(/^\s*(`{3,}|~{3,})/)?.[1]
+
+    if (marker && (!fence || marker.startsWith(fence))) fence = fence ? undefined : marker
+
+    if (!fence && /^-{3,}\s*$/.test(line)) {
+      slides.push(current.join("\n"))
+      current = []
+      continue
+    }
+
+    current.push(line)
+  }
+
+  slides.push(current.join("\n"))
+
+  return slides.filter((slide) => slide.trim().length > 0)
+}

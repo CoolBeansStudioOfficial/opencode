@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { bytesFromContent, contentBytes, parseDelimited, resolveArtifactPath } from "./artifact"
+import { bytesFromContent, contentBytes, isSlideDeck, parseDelimited, resolveArtifactPath, splitSlides } from "./artifact"
 
 describe("binary content helpers", () => {
   test("reads size and independent byte copies from raw bytes", () => {
@@ -55,5 +55,15 @@ describe("resolveArtifactPath", () => {
     ["docs", "/abs/path"],
   ])("rejects %s + %s", (base, href) => {
     expect(resolveArtifactPath(base, href)).toBeUndefined()
+  })
+})
+
+describe("splitSlides", () => {
+  test("splits on --- lines, keeps fenced --- and drops empty slides", () => {
+    const deck = "# One\n\nhello\n---\n\n---\n# Two\n```yaml\n---\nkey: value\n```\n---  \n# Three\r\n"
+
+    expect(splitSlides(deck)).toEqual(["# One\n\nhello", "# Two\n```yaml\n---\nkey: value\n```", "# Three\n"])
+    expect(isSlideDeck("docs/Pitch.SLIDES.md")).toBe(true)
+    expect(isSlideDeck("docs/notes.md")).toBe(false)
   })
 })

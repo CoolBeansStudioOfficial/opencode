@@ -23,7 +23,15 @@ import { MarkdownProvider, useMarkdown } from "@opencode/session-ui/context/mark
 import { artifactKind, type ArtifactKind } from "@opencode/util/artifact"
 import { getDirectory, getFilename } from "@opencode/util/path"
 import { createKeyed, useExtension, type FileContent, type MountedSession } from "../sdk"
-import { blobUrlFromContent, bytesFromContent, contentBytes, parseDelimited, resolveArtifactPath } from "./artifact"
+import {
+  blobUrlFromContent,
+  bytesFromContent,
+  contentBytes,
+  isSlideDeck,
+  parseDelimited,
+  resolveArtifactPath,
+  splitSlides,
+} from "./artifact"
 import { current, useShared } from "./context"
 import { FileViewer } from "./contract"
 import { workspaceFileUrl } from "./path"
@@ -135,6 +143,15 @@ export default function ArtifactView(props: {
   })
 
   const rendered = () => (
+    <Show
+      when={kind() === "markdown" && isSlideDeck(props.path)}
+      fallback={renderedDocument()}
+    >
+      <ArtifactSlides session={props.session} path={props.path} text={props.content.content} cacheKey={props.cacheKey} />
+    </Show>
+  )
+
+  const renderedDocument = () => (
     <ScrollView class="min-h-0 flex-1">
       <Show
         when={kind() === "markdown"}
@@ -891,6 +908,53 @@ function ArtifactBinary(props: { path: string; size: string; reason?: string }) 
         <div class="text-14-medium text-text-strong">{getFilename(props.path)}</div>
         <div class="text-13-regular text-text-weak">{ctx.t("view.binary", { size: props.size })}</div>
         <Show when={props.reason}>{(reason) => <div class="text-13-regular text-text-weak">{reason()}</div>}</Show>
+      </div>
+    </div>
+  )
+}
+
+// Fork: a `.slides.md` deck shows one slide at a time; arrow keys, Page Up/Down and the buttons move between slides.
+function ArtifactSlides(props: { session: MountedSession; path: string; text: string; cacheKey?: string }) {
+  const ctx = useExtension()
+  const slides = createMemo(() => splitSlides(props.text))
+  const [selected, setSelected] = createSignal(0)
+  // An edit that removes slides keeps the deck on its last slide instead of an empty one.
+  const index = () => Math.min(selected(), Math.max(0, slides().length - 1))
+  const move = (step: number) => setSelected(Math.max(0, Math.min(slides().length - 1, index() + step)))
+
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (event.key === "ArrowRight" || event.key === "PageDown" || event.key === " ") move(1)
+    else if (event.key === "ArrowLeft" || event.key === "PageUp") move(-1)
+    else if (event.key === "Home") setSelected(0)
+    else if (event.key === "End") setSelected(slides().length - 1)
+    else return
+    event.preventDefault()
+  }
+
+  return (
+    <div
+      data-component="artifact-slides"
+      tabIndex={0}
+      class="flex min-h-0 flex-1 flex-col gap-3 p-4 outline-none"
+      onKeyDown={onKeyDown}
+    >
+      <div class="flex min-h-0 flex-1 items-center justify-center">
+        <div class="aspect-video max-h-full w-full max-w-[960px] overflow-auto rounded-[12px] border border-v2-border-border-base bg-v2-background-bg-base px-10 py-8 text-[18px] shadow-[var(--v2-elevation-raised)]">
+          <Show when={slides()[index()]}>
+            {(slide) => (
+              <ArtifactMarkdown session={props.session} path={props.path} text={slide()} cacheKey={props.cacheKey} />
+            )}
+          </Show>
+        </div>
+      </div>
+      <div class="flex shrink-0 items-center justify-center gap-3 text-[12px] text-v2-text-text-faint">
+        <Button size="small" variant="ghost" disabled={index() === 0} onClick={() => move(-1)}>
+          {ctx.t("slides.previous")}
+        </Button>
+        <span>{ctx.t("slides.position", { current: index() + 1, total: Math.max(1, slides().length) })}</span>
+        <Button size="small" variant="ghost" disabled={index() >= slides().length - 1} onClick={() => move(1)}>
+          {ctx.t("slides.next")}
+        </Button>
       </div>
     </div>
   )
