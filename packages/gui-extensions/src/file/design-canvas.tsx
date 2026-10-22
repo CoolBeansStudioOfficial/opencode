@@ -58,12 +58,20 @@ export function DesignCanvas(props: { session: MountedSession; path: string; des
     ),
   )
 
+  // On the server machine a live frame gets its own loopback proxy origin, so the app keeps its real paths (routers
+  // read location.pathname). Remote clients such as a phone use the ticketed sub-path proxy instead.
+  const sameMachine = () => ["127.0.0.1", "localhost", "[::1]"].includes(new URL(props.session.server.url).hostname)
+
   const live = createLatest(
-    () => ({ server: props.session.server, ports: ports().join(",") }),
+    () => ({ server: props.session.server, ports: ports().join(","), local: sameMachine() }),
     async (current) =>
       Object.fromEntries(
         await Promise.all(
-          ports().map(async (port) => [port, await current.server.client.rpc(DesignRpc.Definition).live({ port })] as const),
+          ports().map(async (port) => {
+            const rpc = current.server.client.rpc(DesignRpc.Definition)
+
+            return [port, current.local ? await rpc.origin({ port }) : await rpc.live({ port })] as const
+          }),
         ),
       ),
   )
@@ -93,7 +101,11 @@ export function DesignCanvas(props: { session: MountedSession; path: string; des
 
       if (!local) return frame.source.url
 
-      return prefix ? `${origin}${prefix}${local.path.startsWith("/") ? local.path : `/${local.path}`}` : undefined
+      const path = local.path.startsWith("/") ? local.path : `/${local.path}`
+
+      if (!prefix) return undefined
+
+      return prefix.startsWith("http") ? `${prefix}${path}` : `${origin}${prefix}${path}`
     }
 
     const base = files.latest
@@ -243,7 +255,15 @@ export function DesignCanvas(props: { session: MountedSession; path: string; des
           <For each={props.design.frames}>
             {(frame) => (
               <div class="absolute" style={{ left: `${frame.x}px`, top: `${frame.y}px`, width: `${frame.width}px` }}>
-                <div class="mb-3 flex items-center gap-3 text-v2-text-text-muted" style={{ "font-size": `${Math.max(12, 13 / view.zoom)}px` }}>
+                <div
+                  class="flex items-center text-v2-text-text-muted"
+                  style={{
+                    // Labels keep a readable on-screen size at any zoom.
+                    "font-size": `${Math.max(12, 13 / view.zoom)}px`,
+                    gap: `${Math.max(12, 12 / view.zoom)}px`,
+                    "margin-bottom": `${Math.max(12, 10 / view.zoom)}px`,
+                  }}
+                >
                   <span class="truncate text-v2-text-text-base">{frame.name}</span>
                   <span>
                     {frame.width} × {frame.height}

@@ -4,6 +4,7 @@ import { HttpServerError, HttpServerRequest, HttpServerResponse } from "effect/h
 import { createHash } from "node:crypto"
 import { load, type AssetMap, type BrotliMap } from "../app-assets"
 import { DesignTicket } from "@opencode/util/design-ticket"
+import { DesignInspector } from "@opencode/util/design-inspector"
 import { stat } from "node:fs/promises"
 import path from "node:path"
 
@@ -21,6 +22,12 @@ export const handler = Effect.fn("cli.web-ui.handler")(function* (options?: {
       const url = new URL(request.url, "http://localhost")
 
       if (url.pathname.startsWith("/design/")) return yield* designFrame(request, url)
+
+      if (url.pathname === "/design-inspector.js")
+        return HttpServerResponse.text(DesignInspector.source, {
+          headers: { "cache-control": "no-store" },
+          contentType: "text/javascript",
+        })
       // A design frame's root-relative requests (`/src/main.tsx`) belong to the frame, not the app shell.
       const frame = DesignTicket.framePrefix(request.headers.referer)
 
@@ -91,7 +98,8 @@ function isRouteNotFound(error: unknown) {
 // qr-scanner decodes in a worker it creates from a blob: URL whenever the browser has no BarcodeDetector (Safari, desktop
 // Chrome on Windows and Linux). Without worker-src that worker falls under script-src 'self' and never starts.
 function csp(hash = "") {
-  return `default-src 'self'; script-src 'self' 'wasm-unsafe-eval'${hash ? ` 'sha256-${hash}'` : ""}; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; font-src 'self' data:; media-src 'self' data:; connect-src * data: blob:; worker-src 'self' blob:`
+  // Fork: design canvases frame the per-port loopback proxies of local dev servers.
+  return `default-src 'self'; frame-src 'self' http://127.0.0.1:* http://localhost:*; script-src 'self' 'wasm-unsafe-eval'${hash ? ` 'sha256-${hash}'` : ""}; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; font-src 'self' data:; media-src 'self' data:; connect-src * data: blob:; worker-src 'self' blob:`
 }
 
 function cspForHtml(body: string) {

@@ -73,16 +73,15 @@ export function framePrefix(referer: string | undefined) {
   }
 }
 
-const INSPECTOR = `<script src="/design-inspector.js"></script>`
-
 /** Adds the design inspector to an HTML document, after <head> when there is one. */
-export function injectInspector(html: string) {
-  if (html.includes("/design-inspector.js")) return html
+export function injectInspector(html: string, src = "/design-inspector.js") {
+  if (html.includes("design-inspector.js")) return html
+  const tag = `<script src="${src}"></script>`
   const head = html.match(/<head\b[^>]*>/i)
 
-  if (head?.index !== undefined) return html.slice(0, head.index + head[0].length) + INSPECTOR + html.slice(head.index + head[0].length)
+  if (head?.index !== undefined) return html.slice(0, head.index + head[0].length) + tag + html.slice(head.index + head[0].length)
 
-  return INSPECTOR + html
+  return tag + html
 }
 
 export * as DesignTicket from "./design-ticket.js"

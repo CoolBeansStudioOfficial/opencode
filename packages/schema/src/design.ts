@@ -12,6 +12,8 @@ export const Definition = Rpc.define({
   methods: {
     files: { input: portable(Schema.Struct({ directory: Schema.String })), output: portable(Schema.String) },
     live: { input: portable(Schema.Struct({ port: Schema.Number })), output: portable(Schema.String) },
+    // The origin of a root-preserving loopback proxy for the port; only reachable from the server machine.
+    origin: { input: portable(Schema.Struct({ port: Schema.Number })), output: portable(Schema.String) },
   },
   events: {},
 })

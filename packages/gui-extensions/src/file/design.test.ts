@@ -56,11 +56,11 @@ describe("design helpers", () => {
 })
 
 describe("designTokens", () => {
-  test("reads custom properties, ignoring comments and keeping the last value", () => {
+  test("reads custom properties, ignoring comments and keeping the base value", () => {
     expect(
       designTokens(":root { --brand: #D97757; /* --hidden: red; */ --space-2: 8px }\n.dark { --brand: #E89275; }"),
     ).toEqual([
-      { name: "--brand", value: "#E89275" },
+      { name: "--brand", value: "#D97757" },
       { name: "--space-2", value: "8px" },
     ])
   })

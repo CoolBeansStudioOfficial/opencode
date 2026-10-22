@@ -93,12 +93,12 @@ export function localPort(url: string) {
   }
 }
 
-/** CSS custom properties declared in a stylesheet, in order, last declaration winning: the design system's tokens. */
+/** CSS custom properties declared in a stylesheet, in order, keeping the first (base, usually `:root`) value of each. */
 export function designTokens(css: string) {
   const tokens = new Map<string, string>()
 
   for (const match of css.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/(--[\w-]+)\s*:\s*([^;}]+)/g))
-    tokens.set(match[1], match[2].trim())
+    if (!tokens.has(match[1])) tokens.set(match[1], match[2].trim())
 
   return [...tokens].map(([name, value]) => ({ name, value }))
 }
