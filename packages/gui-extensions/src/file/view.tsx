@@ -13,6 +13,7 @@ import { ScrollView } from "@opencode/ui/scroll-view"
 import { createKeyed, useExtension, type LineRange, type MountedSession, type SessionScreen } from "../sdk"
 import { artifactKind } from "@opencode/util/artifact"
 import ArtifactView from "./artifact-view"
+import { isDesign } from "./design"
 import { useShared } from "./context"
 import { fileTabPath } from "./path"
 
@@ -226,7 +227,8 @@ export function SessionFileView(props: { session: MountedSession; screen: Sessio
   const artifact = createMemo(() => {
     const content = current()?.content
 
-    return content?.type === "binary" || artifactKind(path() ?? "") !== "text"
+    // Fork: a design manifest is text but renders as a design canvas.
+    return content?.type === "binary" || artifactKind(path() ?? "") !== "text" || isDesign(path() ?? "")
   })
 
   const selectedLines = createMemo<LineRange | null>(() => {

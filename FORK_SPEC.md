@@ -64,7 +64,7 @@ Base: fork of [anomalyco/opencode](https://github.com/anomalyco/opencode) (MIT).
 | Memory | Done | `~/.config/opencode/memory/`, injected into every session |
 | Scheduled tasks | Done | Settings → server → Scheduled tasks, or the `schedule` tool |
 | `/compact` focus hint | Done | `/compact <what to keep>`; not yet tested against a live model |
-| Design canvas | Not started | |
+| Claude Design (canvas on real code) | Done | `design.json` frames of real pages and the running app; point-and-comment; live reload; system tokens |
 | Browser pane on web/phone | Not planned | Electron-only by design |
 | CI auto-fix / background PR watcher | Not started | Checks refresh on demand |
 

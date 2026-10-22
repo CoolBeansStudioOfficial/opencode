@@ -34,6 +34,8 @@ import {
 } from "./artifact"
 import { current, useShared } from "./context"
 import { FileViewer } from "./contract"
+import { DesignCanvas } from "./design-canvas"
+import { isDesign, parseDesign, type Design } from "./design"
 import { workspaceFileUrl } from "./path"
 
 type ArtifactMode = "preview" | "source"
@@ -100,6 +102,25 @@ export default function ArtifactView(props: {
     if (state().undecodable) return "binary"
 
     return artifactKind(props.path)
+  })
+
+  // Fork: a design manifest, or any HTML page opened as a design, renders on the design canvas. An HTML page shows
+  // desktop and mobile frames of the same real file.
+  const [designView, setDesignView] = createSignal(false)
+
+  const design = createMemo((): Design | { error: string } | undefined => {
+    if (isDesign(props.path)) return parseDesign(props.content.content)
+
+    if (kind() !== "html" || !designView()) return undefined
+    const name = getFilename(props.path)
+
+    return {
+      name,
+      frames: [
+        { id: "desktop", name: "Desktop", source: { kind: "file", path: name }, width: 1440, height: 900, x: 0, y: 0 },
+        { id: "mobile", name: "Mobile", source: { kind: "file", path: name }, width: 390, height: 844, x: 1560, y: 0 },
+      ],
+    }
   })
 
   const previewable = createMemo(() => {
@@ -175,12 +196,25 @@ export default function ArtifactView(props: {
         meta={meta()}
         actions={
           <Show when={kind() === "html"}>
+            <Button size="small" variant={designView() ? "neutral" : "ghost"} onClick={() => setDesignView(!designView())}>
+              {ctx.t("design.view")}
+            </Button>
             <OpenInBrowserButton session={props.session} path={props.path} />
           </Show>
         }
       />
       <Show when={!previewable() || state().mode === "preview"} fallback={props.source}>
         <Switch fallback={<ArtifactBinary path={props.path} size={size()} reason={state().reason} />}>
+          <Match when={design()} keyed>
+            {(value) => (
+              <Show
+                when={"frames" in value ? value : undefined}
+                fallback={<div class="p-4 text-[13px] text-v2-text-text-muted">{"error" in value ? value.error : ""}</div>}
+              >
+                {(parsed) => <DesignCanvas session={props.session} path={props.path} design={parsed()} />}
+              </Show>
+            )}
+          </Match>
           <Match when={kind() === "image" || kind() === "svg"}>
             <ArtifactImage path={props.path} content={props.content} {...media} />
           </Match>
