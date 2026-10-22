@@ -614,3 +614,25 @@
 [data-slot="composer-below"] [data-slot="composer-controls"] > div > :nth-child(2) {
   margin-inline-start: auto;
 }
+
+/* Claude desktop: plain assistant prose at 15px, inline code as a subtle pill in the accent color. */
+[data-component="markdown"] {
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+[data-component="markdown"] :not(pre) > code {
+  color: var(--v2-text-text-accent);
+  background: var(--v2-background-bg-layer-02);
+  border-radius: 6px;
+  padding: 1px 6px;
+}
+
+[data-component="new-session-greeting"] svg {
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  margin-inline-end: 0.3em;
+  vertical-align: -0.05em;
+  color: #d77858;
+}
