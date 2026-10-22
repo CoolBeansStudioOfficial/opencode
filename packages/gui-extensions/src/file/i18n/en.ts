@@ -17,6 +17,8 @@ export default {
   "design.comment": "Comment",
   "design.commenting": "Commenting… (Esc to stop)",
   "design.fit": "Fit",
+  "design.reload": "Reload",
+  "design.reloadAll": "Reload all",
   "design.open": "Open",
   "design.loading": "Loading…",
   "design.cancel": "Cancel",

@@ -14,7 +14,7 @@ describe("registryKind", () => {
     ["shot.png", "image"],
     ["package.json", undefined],
     ["src/app.ts", undefined],
-  ])("%s", (file, kind) => expect(registryKind(file)).toBe(kind))
+  ] as const)("%s", (file, kind) => expect(registryKind(file)).toBe(kind))
 })
 
 describe("names", () => {

@@ -115,7 +115,7 @@ export function ArtifactPreview(props: { entry: Artifacts.Entry; ctx: ServerCtx 
   })
 
   return (
-    <div ref={root} class="relative aspect-[8/5] w-full overflow-hidden" style={{ background: "#fff" }}>
+    <div ref={root} class="relative aspect-[8/5] w-full overflow-hidden bg-v2-background-bg-deep" style={{ background: doc()?.html ? "#fff" : undefined }}>
       <Show
         when={doc()?.html ?? doc()?.image}
         fallback={

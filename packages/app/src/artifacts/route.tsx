@@ -7,6 +7,7 @@ import { createMemo, For, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/runtime/i18n/language"
 import { createArtifactsController, type ArtifactsController } from "./controller"
+import { DesignFromProjectDialog } from "./design-project-dialog"
 import { kindLabelKey, projectName } from "./kinds"
 import { NewArtifactDialog } from "./new-dialog"
 import { ArtifactPreview } from "./preview"
@@ -169,6 +170,15 @@ export function ArtifactsPage() {
               )}
             </For>
           </div>
+
+          <button
+            type="button"
+            data-action="design-from-project-open"
+            class="mt-3 w-fit text-[13px] text-v2-text-text-muted underline-offset-2 hover:text-v2-text-text-base hover:underline"
+            onClick={() => void dialog.show(() => <DesignFromProjectDialog controller={controller} />)}
+          >
+            {language.t("artifacts.fromProject.open")}
+          </button>
 
           <Show
             when={visible().length > 0}

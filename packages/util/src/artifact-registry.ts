@@ -163,7 +163,7 @@ export function detectDesign(input: {
 
 /** Lays frames out on a three-column grid so a big project doesn't become one endless row. */
 const place = (frames: Frame[]): Frame[] =>
-  frames.map((frame, index) => ({ ...frame, x: (index % 3) * 1560, y: Math.floor(index / 3) * 1000 }))
+  frames.map((frame, index) => ({ ...frame, x: (index % 3) * 1560, y: Math.floor(index / 3) * 1100 }))
 
 const byRoute = (a: string, b: string) =>
   a === "/" ? -1 : b === "/" ? 1 : a.split("/").length - b.split("/").length || a.localeCompare(b)

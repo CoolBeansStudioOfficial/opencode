@@ -1,3 +1,4 @@
+import { Artifacts } from "@opencode/schema/artifacts"
 import { Design as DesignRpc } from "@opencode/schema/design"
 import { Button } from "@opencode/ui/button"
 import { debounce } from "@solid-primitives/scheduled"
@@ -16,6 +17,8 @@ import { designBounds, designTokens, localPort, type Design, type DesignFrame } 
 
 const Selected = Schema.Struct({
   type: Schema.Literal("oc-design.select"),
+  // A PNG data URL of the element, when the frame could draw one.
+  screenshot: Schema.optional(Schema.String),
   element: Schema.Struct({
     selector: Schema.String,
     tag: Schema.String,
@@ -40,7 +43,12 @@ export function DesignCanvas(props: { session: MountedSession; path: string; des
   const [commenting, setCommenting] = createSignal(false)
   const [showSystem, setShowSystem] = createSignal(false)
   const [version, setVersion] = createSignal(0)
-  const [selection, setSelection] = createStore<{ frame?: DesignFrame; element?: Element; draft: string }>({ draft: "" })
+  const [selection, setSelection] = createStore<{ frame?: DesignFrame; element?: Element; shot?: string; draft: string }>({
+    draft: "",
+  })
+  // Per-frame reload counters, and the numbered pins left by comments already sent to the agent.
+  const [reloads, setReloads] = createStore<Record<string, number>>({})
+  const [pins, setPins] = createStore<{ n: number; frameId: string; x: number; y: number; comment: string; selector: string }[]>([])
   const frames = new Map<string, HTMLIFrameElement>()
   let viewport: HTMLDivElement | undefined
 
@@ -143,7 +151,7 @@ export function DesignCanvas(props: { session: MountedSession; path: string; des
     const frame = props.design.frames.find((item) => frames.get(item.id)?.contentWindow === event.source)
 
     if (!frame) return
-    setSelection({ frame, element: event.data.element, draft: "" })
+    setSelection({ frame, element: event.data.element, shot: event.data.screenshot, draft: "" })
   })
 
   const broadcast = (enabled: boolean) => {
@@ -175,23 +183,32 @@ export function DesignCanvas(props: { session: MountedSession; path: string; des
 
   let drag: { x: number; y: number } | undefined
 
-  const send = () => {
+  const send = async () => {
     const element = selection.element
     const frame = selection.frame
     const screen = ctx.screen.current()
 
     if (!element || !frame || !screen || !selection.draft.trim()) return
     const source = frame.source.kind === "file" ? resolveArtifactPath(manifestDir(), frame.source.path) : frame.source.url
+    const commentID = crypto.randomUUID()
+    const shot = selection.shot
+      ? await props.session.server.client
+          .rpc(Artifacts.Definition)
+          .saveShot({ directory: directory(), id: commentID, data: selection.shot })
+          .catch(() => undefined)
+      : undefined
+    setPins(pins.length, { n: pins.length + 1, frameId: frame.id, x: element.rect.x, y: element.rect.y, comment: selection.draft.trim(), selector: element.selector })
     screen.composer.attach({
       type: "note",
       origin: ctx.id,
-      commentID: crypto.randomUUID(),
+      commentID,
       label: `${frame.name}: ${element.selector.split(" > ").pop() ?? element.tag}`,
       icon: "select-element",
       subject: [
         `the element ${JSON.stringify(element.selector)} in the design frame ${JSON.stringify(frame.name)} (${source}; ${element.url})`,
         element.text ? `Its text: ${JSON.stringify(element.text)}` : "",
         `Its HTML: ${element.html}`,
+        shot ? `A screenshot of the element is saved at ${shot}; open it to see how it looks.` : "",
         `Computed styles: ${JSON.stringify(element.styles)}`,
         "The frame renders the project's real code; change that source.",
       ]
@@ -199,7 +216,7 @@ export function DesignCanvas(props: { session: MountedSession; path: string; des
         .join("\n"),
       comment: selection.draft.trim(),
     })
-    setSelection({ frame: undefined, element: undefined, draft: "" })
+    setSelection({ frame: undefined, element: undefined, shot: undefined, draft: "" })
   }
 
   return (
@@ -211,6 +228,9 @@ export function DesignCanvas(props: { session: MountedSession; path: string; des
             {ctx.t("design.system")}
           </Button>
         </Show>
+        <Button size="small" variant="ghost" onClick={() => setVersion((value) => value + 1)}>
+          {ctx.t("design.reloadAll")}
+        </Button>
         <Button size="small" variant={commenting() ? "neutral" : "ghost"} onClick={() => broadcast(!commenting())}>
           {ctx.t(commenting() ? "design.commenting" : "design.comment")}
         </Button>
@@ -259,7 +279,7 @@ export function DesignCanvas(props: { session: MountedSession; path: string; des
                   class="flex items-center text-v2-text-text-muted"
                   style={{
                     // Labels keep a readable on-screen size at any zoom.
-                    "font-size": `${Math.max(12, 13 / view.zoom)}px`,
+                    "font-size": `${Math.min(Math.max(12, 13 / view.zoom), frame.width / 20)}px`,
                     gap: `${Math.max(12, 12 / view.zoom)}px`,
                     "margin-bottom": `${Math.max(12, 10 / view.zoom)}px`,
                   }}
@@ -268,6 +288,14 @@ export function DesignCanvas(props: { session: MountedSession; path: string; des
                   <span>
                     {frame.width} × {frame.height}
                   </span>
+                  <button
+                    type="button"
+                    class="hover:underline"
+                    data-action="design-frame-reload"
+                    onClick={() => setReloads(frame.id, (reloads[frame.id] ?? 0) + 1)}
+                  >
+                    {ctx.t("design.reload")}
+                  </button>
                   <Show when={src(frame)}>
                     {(url) => (
                       <a class="hover:underline" href={url()} target="_blank" rel="noreferrer">
@@ -277,10 +305,10 @@ export function DesignCanvas(props: { session: MountedSession; path: string; des
                   </Show>
                 </div>
                 <div
-                  class="overflow-hidden rounded-[12px] bg-white shadow-[var(--v2-elevation-raised)]"
+                  class="relative overflow-hidden rounded-[12px] bg-white shadow-[var(--v2-elevation-raised)]"
                   style={{ width: `${frame.width}px`, height: `${frame.height}px` }}
                 >
-                  <Show when={`${version()}|${src(frame) ?? ""}`} keyed>
+                  <Show when={`${version()}|${reloads[frame.id] ?? 0}|${src(frame) ?? ""}`} keyed>
                     {(_reload) => (
                       <Show when={src(frame)} fallback={<div class="p-6 text-v2-text-text-faint">{ctx.t("design.loading")}</div>}>
                         {(url) => (
@@ -297,6 +325,25 @@ export function DesignCanvas(props: { session: MountedSession; path: string; des
                       </Show>
                     )}
                   </Show>
+                  <For each={pins.filter((pin) => pin.frameId === frame.id)}>
+                    {(pin) => (
+                      <span
+                        data-component="design-pin"
+                        title={`${pin.selector}: ${pin.comment}`}
+                        class="pointer-events-auto absolute flex items-center justify-center rounded-full bg-[#D97757] font-semibold text-white shadow"
+                        style={{
+                          left: `${pin.x}px`,
+                          top: `${pin.y}px`,
+                          width: `${Math.max(22, 22 / view.zoom)}px`,
+                          height: `${Math.max(22, 22 / view.zoom)}px`,
+                          "font-size": `${Math.max(12, 12 / view.zoom)}px`,
+                          transform: "translate(-50%, -50%)",
+                        }}
+                      >
+                        {pin.n}
+                      </span>
+                    )}
+                  </For>
                 </div>
               </div>
             )}
@@ -341,7 +388,7 @@ export function DesignCanvas(props: { session: MountedSession; path: string; des
               onKeyDown={(event) => {
                 event.stopPropagation()
 
-                if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) send()
+                if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) void send()
 
                 if (event.key === "Escape") setSelection({ frame: undefined, element: undefined, draft: "" })
               }}
@@ -350,7 +397,7 @@ export function DesignCanvas(props: { session: MountedSession; path: string; des
               <Button size="small" variant="ghost" onClick={() => setSelection({ frame: undefined, element: undefined, draft: "" })}>
                 {ctx.t("design.cancel")}
               </Button>
-              <Button size="small" disabled={!selection.draft.trim()} onClick={send}>
+              <Button size="small" disabled={!selection.draft.trim()} onClick={() => void send()}>
                 {ctx.t("design.addToChat")}
               </Button>
             </div>

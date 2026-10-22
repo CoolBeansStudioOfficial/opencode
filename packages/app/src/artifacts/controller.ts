@@ -1,3 +1,4 @@
+import type { SessionInfo } from "@opencode/client/promise"
 import { Artifacts } from "@opencode/schema/artifacts"
 import { skipToken, useQuery } from "@tanstack/solid-query"
 import { createMemo } from "solid-js"
@@ -89,7 +90,35 @@ export function createArtifactsController() {
     return entry
   }
 
-  return { home, query, entries, rpc, open, editWithChat, create, fail, ctx }
+  // The sidebar's session index (same query key), read from the cache only.
+  const indexed = useQuery(() => ({
+    queryKey: ["home-sessions", home.server.focused()] as const,
+    queryFn: skipToken,
+    select: (sessions: SessionInfo[]) => sessions.map((session) => session.location.directory),
+  }))
+
+  /** Opened projects first, then the folders of sessions and artifacts the server already knows. */
+  const projects = () => [
+    ...new Set([
+      ...home.project.list().map((project) => project.worktree),
+      ...(ctx()?.data.session.list().map((session) => session.location.directory) ?? []),
+      ...(indexed.data ?? []),
+      ...entries().map((entry) => entry.directory),
+    ]),
+  ]
+
+  /** Writes a design.json for an existing web project and opens it. */
+  async function designFromProject(input: { directory: string; url: string }) {
+    const result = await rpc()
+      ?.detect({ directory: input.directory, url: input.url.trim() || undefined })
+      .catch((error: Error) => void fail(error))
+    if (!result) return
+    void query.refetch()
+    await open(result.entry)
+    return result
+  }
+
+  return { home, query, entries, rpc, open, editWithChat, create, designFromProject, projects, fail, ctx }
 }
 
 export type ArtifactsController = ReturnType<typeof createArtifactsController>

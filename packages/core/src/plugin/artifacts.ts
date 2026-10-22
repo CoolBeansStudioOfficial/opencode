@@ -208,8 +208,20 @@ export function make(ctx: Context) {
       return { entry: entry!, frames: design.frames.length, file: manifest }
     })
 
+  const saveShot = (input: { directory: string; id: string; data: string }) =>
+    Effect.gen(function* () {
+      const base64 = input.data.match(/^data:image\/png;base64,(.+)$/)?.[1]
+      if (!base64) return yield* Effect.die(new Error("Expected a PNG data URL"))
+      const relative = path.join(".opencode", "design-comments", `${input.id.replace(/[^\w-]/g, "")}.png`)
+      const file = path.join(path.resolve(input.directory), relative)
+      yield* Effect.promise(() => mkdir(path.dirname(file), { recursive: true }))
+      yield* Effect.promise(() => writeFile(file, Buffer.from(base64, "base64")))
+      return relative.replaceAll("\\", "/")
+    })
+
   return {
     record,
+    saveShot,
     list,
     create,
     detect,
@@ -283,5 +295,6 @@ export function register(ctx: Context) {
     history: ({ id }) => registry.history(id),
     restore: ({ id, n }) => registry.restore(id, n),
     detect: (input) => registry.detect(input),
+    saveShot: (input) => registry.saveShot(input),
   })
 }

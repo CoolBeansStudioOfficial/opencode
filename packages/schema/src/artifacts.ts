@@ -77,6 +77,12 @@ export const Definition = Rpc.define({
       input: portable(Schema.Struct({ directory: Schema.String, url: Schema.optional(Schema.String) })),
       output: portable(Detected),
     },
+    // Saves a design comment's element screenshot (a PNG data URL) under the project's .opencode folder and returns
+    // its path relative to the directory, so the agent can open it.
+    saveShot: {
+      input: portable(Schema.Struct({ directory: Schema.String, id: Schema.String, data: Schema.String })),
+      output: portable(Schema.String),
+    },
   },
   events: {},
 })

@@ -15,26 +15,24 @@ import { KINDS, kindLabelKey, projectName } from "./kinds"
 export function NewArtifactDialog(props: { controller: ArtifactsController; kind?: Artifacts.Kind }) {
   const language = useLanguage()
   const dialog = useDialog()
-  // Opened projects first, then the folders of sessions the server already knows.
-  const projects = () => [
-    ...new Set([
-      ...props.controller.home.project.list().map((project) => project.worktree),
-      ...(props.controller.ctx()?.data.session.list().map((session) => session.location.directory) ?? []),
-    ]),
-  ]
+  const projects = props.controller.projects
   const [busy, setBusy] = createSignal(false)
   const [form, setForm] = createStore({
     kind: props.kind ?? ("html" as Artifacts.Kind),
     name: "",
-    directory: props.controller.home.project.newSession()?.worktree ?? projects()[0] ?? "",
+    directory: "",
     folder: "artifacts",
     prompt: "",
   })
 
+  // The server's folders may load after the dialog opens, so an unchosen project means the first one.
+  const directory = () =>
+    form.directory || props.controller.home.project.newSession()?.worktree || projects()[0] || ""
+
   const submit = async () => {
-    if (busy() || !form.name.trim() || !form.directory) return
+    if (busy() || !form.name.trim() || !directory()) return
     setBusy(true)
-    const entry = await props.controller.create({ ...form }).finally(() => setBusy(false))
+    const entry = await props.controller.create({ ...form, directory: directory() }).finally(() => setBusy(false))
     if (entry) dialog.close()
   }
 
@@ -58,7 +56,7 @@ export function NewArtifactDialog(props: { controller: ArtifactsController; kind
             {language.t("artifacts.field.project")}
             <Select
               options={projects()}
-              current={form.directory}
+              current={directory()}
               label={projectName}
               onSelect={(directory) => directory && setForm("directory", directory)}
             />
@@ -87,7 +85,7 @@ export function NewArtifactDialog(props: { controller: ArtifactsController; kind
         <Button variant="ghost" onClick={() => dialog.close()}>
           {language.t("common.cancel")}
         </Button>
-        <Button disabled={busy() || !form.name.trim() || !form.directory} data-action="artifact-create" onClick={() => void submit()}>
+        <Button disabled={busy() || !form.name.trim() || !directory()} data-action="artifact-create" onClick={() => void submit()}>
           {language.t("artifacts.create")}
         </Button>
       </DialogFooter>
