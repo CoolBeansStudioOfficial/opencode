@@ -12,6 +12,7 @@ import cursorThemeJson from "./themes/cursor.json"
 import draculaThemeJson from "./themes/dracula.json"
 import everforestThemeJson from "./themes/everforest.json"
 import flexokiThemeJson from "./themes/flexoki.json"
+import claudeThemeJson from "./themes/claude.json"
 import githubThemeJson from "./themes/github.json"
 import gruvboxThemeJson from "./themes/gruvbox.json"
 import kanagawaThemeJson from "./themes/kanagawa.json"
@@ -61,6 +62,8 @@ export const draculaTheme = draculaThemeJson as DesktopTheme
 export const everforestTheme = everforestThemeJson as DesktopTheme
 
 export const flexokiTheme = flexokiThemeJson as DesktopTheme
+
+export const claudeTheme = claudeThemeJson as DesktopTheme
 
 export const githubTheme = githubThemeJson as DesktopTheme
 
@@ -114,6 +117,7 @@ export const DEFAULT_THEMES: Record<string, DesktopTheme> = {
   aura: auraTheme,
   ayu: ayuTheme,
   carbonfox: carbonfoxTheme,
+  claude: claudeTheme,
   catppuccin: catppuccinTheme,
   "catppuccin-frappe": catppuccinFrappeTheme,
   "catppuccin-macchiato": catppuccinMacchiatoTheme,

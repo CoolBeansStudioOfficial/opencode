@@ -55,6 +55,7 @@ const names: Record<string, string> = {
   aura: "Aura",
   ayu: "Ayu",
   carbonfox: "Carbonfox",
+  claude: "Claude",
   catppuccin: "Catppuccin",
   "catppuccin-frappe": "Catppuccin Frappe",
   "catppuccin-macchiato": "Catppuccin Macchiato",

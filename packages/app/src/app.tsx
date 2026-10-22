@@ -56,6 +56,8 @@ export function AppBaseProviders(
     <MetaProvider>
       <Font />
       <ThemeProvider
+        // Fork: the Claude theme is the default look; other themes stay selectable in settings.
+        defaultTheme="claude"
         onThemeApplied={(_, mode, scheme) => {
           props.onThemeApplied?.(mode, scheme)
         }}

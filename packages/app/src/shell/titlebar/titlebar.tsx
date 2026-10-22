@@ -54,7 +54,7 @@ const macTrafficLightsTopClearance = 28
 // titlebar row stays 16px clear of it, as ChatGPT's phone header does. Without one, 8px matches the content gap below.
 const mobileTopClearance = "max(8px, min(16px, env(safe-area-inset-top, 0px) * 1000))"
 
-export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
+export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement }; hideTabs?: boolean }) {
   const platform = usePlatform()
   const command = useCommand()
   const language = useLanguage()
@@ -681,7 +681,7 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
                   <Show
                     when={props.verticalTabs}
                     fallback={
-                      <>
+                      <Show when={!props.hideTabs}>
                         <TitlebarTabStrip
                           tabs={tabsStore}
                           currentTab={currentTab()}
@@ -705,7 +705,7 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
                             </>
                           }
                         />
-                      </>
+                      </Show>
                     }
                   >
                     {(vertical) => (

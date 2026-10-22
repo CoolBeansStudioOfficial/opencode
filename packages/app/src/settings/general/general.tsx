@@ -18,7 +18,7 @@ import { SettingsRow } from "@/settings/row"
 import { createShellOptions, type ShellSettingsController } from "./controllers"
 import "@/settings/settings.css"
 
-const tabLayoutOptions: ("horizontal" | "vertical")[] = ["horizontal", "vertical"]
+const tabLayoutOptions: ("hidden" | "horizontal" | "vertical")[] = ["hidden", "horizontal", "vertical"]
 
 const AutoApprovePermissionsSetting: Component = () => {
   const language = useLanguage()
@@ -206,11 +206,7 @@ const TabLayoutSetting = () => {
         aria-label={language.t("settings.appearance.row.tabs.title")}
         placement="bottom-end"
         gutter={6}
-        label={(option) =>
-          option === "horizontal"
-            ? language.t("settings.appearance.row.tabs.horizontal")
-            : language.t("settings.appearance.row.tabs.vertical")
-        }
+        label={(option) => language.t(`settings.appearance.row.tabs.${option}`)}
         onSelect={(option) => option && settings.appearance.setTabLayout(option)}
       />
     </SettingsRow>
