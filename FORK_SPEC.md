@@ -8,7 +8,7 @@ Base: fork of [anomalyco/opencode](https://github.com/anomalyco/opencode) (MIT).
 
 1. **Auto-compact**: automatic summarization near the context limit, plus a manual `/compact [focus hint]`.
 2. **Remote access**: phone browser over Tailscale (private only), including starting new sessions remotely. PWA installable, with web push for "session finished" and "needs your answer".
-3. **Artifacts (Claude Design equivalent)**: live HTML/React preview pane beside the chat; slide and document types the agent fills in; a design canvas for mockups/prototypes. Local only, no public share links.
+3. **Artifacts and Claude Design**: live preview pane beside the chat; slide and document types; a design canvas where every design is real web code. You or the agent can open existing pages or the running app as a design, so there is no conversion step and no drift. Local only, no public share links.
 4. **AskUserQuestion**: multiple-choice question cards (1–4 questions, 2–4 options, multi-select, always an "Other" free-text option, optional recommended option first).
 5. **Sub-sessions and subagents**: background subagents that report back into the same chat, and visible child sessions in the sidebar that can be opened and steered.
 
