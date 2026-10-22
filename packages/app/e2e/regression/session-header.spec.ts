@@ -228,6 +228,7 @@ test.describe("location", () => {
         await expect(separator).toBeVisible()
         await expect(separator).toHaveText("")
         await expect(separator).toHaveAttribute("aria-hidden", "true")
+        await expect(header.locator(".session-location-worktree-icon")).toBeHidden()
         const location = header.locator('[data-slot="session-location-trigger"]')
         await location.hover()
         await expect(location).toHaveCSS("padding-inline-start", "4px")

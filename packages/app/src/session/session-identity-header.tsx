@@ -182,6 +182,7 @@ export function SessionLocation(props: {
       <Menu placement="bottom-start" gutter={4} modal={false} onOpenChange={onOpenChange}>
         <Menu.Trigger
           data-slot="session-location-trigger"
+          title={[projectName(), worktree()].filter(Boolean).join(" / ")}
           class="flex h-6 min-w-0 max-w-[60%] shrink items-center gap-1.5 rounded-[6px] px-1 text-start text-[13px] font-[440] leading-[var(--line-height-compact)] tracking-[-0.04px] text-v2-text-text-muted transition-colors hover:bg-v2-overlay-simple-overlay-hover hover:text-v2-text-text-base focus-visible:bg-v2-overlay-simple-overlay-hover focus-visible:text-v2-text-text-base focus-visible:outline-none data-[expanded]:bg-v2-overlay-simple-overlay-hover data-[expanded]:text-v2-text-text-base"
         >
           <ProjectAvatar
@@ -198,7 +199,7 @@ export function SessionLocation(props: {
           <Show when={!props.compact && worktree()}>
             {(name) => (
               <>
-                <Icon name="outline-worktree" class="shrink-0 text-v2-icon-icon-muted" />
+                <Icon name="outline-worktree" class="session-location-worktree-icon shrink-0 text-v2-icon-icon-muted" />
                 <bdi dir="auto" data-slot="session-location-worktree" class="min-w-12 shrink-[1000] truncate">
                   {name()}
                 </bdi>

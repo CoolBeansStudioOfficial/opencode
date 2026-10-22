@@ -38,7 +38,7 @@
     margin-inline-end: 2px;
   }
 
-  /* The icon-only trigger sits 4px from its icon and the row adds a 4px gap; the avatar's 2px margin counts too. */
+  /* The avatar-only trigger sits 4px from its avatar and the row adds a 4px gap; the avatar's 2px margin counts too. */
   .session-header-location > .session-header-separator {
     --separator-before: 10px;
   }
@@ -47,8 +47,9 @@
     --separator-before: 9px;
   }
 
-  .session-header-location:has([data-slot="session-location-worktree"]) > .session-header-separator {
-    --separator-before: 9px;
+  /* The collapsed header reads avatar, separator, title; the names stay in the trigger's title and accessible name. */
+  .session-header-location .session-location-worktree-icon {
+    display: none;
   }
 
   /* Keep the names available to assistive tech while the icons leave room for the title. */
