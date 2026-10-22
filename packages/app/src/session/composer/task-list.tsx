@@ -1,16 +1,18 @@
 import type { SessionMessageInfo } from "@opencode/client/promise"
+import { Schema } from "effect"
 import { createMemo, createSignal, For, Show } from "solid-js"
 import { Icon } from "@opencode/ui/icon"
 import { useLanguage } from "@/runtime/i18n/language"
 import { useData } from "@/runtime/server/current"
 
-type Todo = { content: string; status: "pending" | "in_progress" | "completed" | "cancelled" }
+const Todo = Schema.Struct({
+  content: Schema.String,
+  status: Schema.Literals(["pending", "in_progress", "completed", "cancelled"]),
+})
 
-const isTodo = (value: unknown): value is Todo =>
-  typeof value === "object" &&
-  value !== null &&
-  typeof (value as Todo).content === "string" &&
-  ["pending", "in_progress", "completed", "cancelled"].includes((value as Todo).status)
+type Todo = typeof Todo.Type
+
+const isTodo = Schema.is(Todo)
 
 // The list from the session's most recent `todowrite` call; each call replaces the whole list.
 export function latestTodos(messages: readonly SessionMessageInfo[]): Todo[] {

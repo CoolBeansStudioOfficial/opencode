@@ -1,16 +1,21 @@
 import { describe, expect, test } from "bun:test"
-import type { SessionMessageInfo } from "@opencode/client/promise"
+import type { SessionMessageAssistant, SessionMessageAssistantTool } from "@opencode/client/promise"
 import { newArtifacts } from "./artifact-open"
 
-const artifact = (id: string, completed: number, path?: string) => ({
+const artifact = (id: string, completed: number, path?: string): SessionMessageAssistantTool => ({
   type: "tool",
   id,
   name: "artifact",
-  state: { status: "completed", input: { path }, content: [], metadata: path ? { path } : {} },
+  state: {
+    status: "completed",
+    input: path ? { path } : {},
+    content: [{ type: "text", text: "" }],
+    metadata: path ? { path } : {},
+  },
   time: { created: completed - 1, completed },
 })
 
-const messages = [
+const messages: SessionMessageAssistant[] = [
   {
     id: "msg_1",
     type: "assistant",
@@ -19,7 +24,7 @@ const messages = [
     content: [artifact("old", 100, "/p/old.html"), artifact("new", 200, "/p/new.html"), artifact("bad", 300)],
     time: { created: 1 },
   },
-] as unknown as SessionMessageInfo[]
+]
 
 describe("newArtifacts", () => {
   test("keeps artifact calls that finished since the view mounted and carry a path", () => {

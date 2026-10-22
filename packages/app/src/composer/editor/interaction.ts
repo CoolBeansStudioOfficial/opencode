@@ -268,6 +268,7 @@ export function createComposerEditor(input: {
 
     // Shift+Tab cycles the permission mode only inside the composer, so it keeps moving focus backwards elsewhere.
     const permissionMode = input.view.permissionMode
+
     if (event.key === "Tab" && event.shiftKey && state.mode === "normal" && permissionMode) {
       event.preventDefault()
       const ids = permissionMode.options().map((option) => option.id)

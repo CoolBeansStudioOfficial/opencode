@@ -24,6 +24,7 @@ export function ServerScheduleSetting(props: { server: ServerConnection.Any }) {
   const rpc = () => ctx().sdk.api.rpc(Schedule.Definition)
   const [tasks, { refetch }] = createResource(() => rpc().list({}))
   const [editing, setEditing] = createSignal(false)
+
   const blank = (): Form => ({
     name: "",
     prompt: "",
@@ -33,6 +34,7 @@ export function ServerScheduleSetting(props: { server: ServerConnection.Any }) {
     time: "09:00",
     days: [],
   })
+
   const [form, setForm] = createStore<Form>(blank())
 
   const fail = (error: Error) =>
@@ -59,6 +61,7 @@ export function ServerScheduleSetting(props: { server: ServerConnection.Any }) {
       form.kind === "interval"
         ? { kind: "interval", minutes: Math.max(1, Number(form.minutes) || 60) }
         : { kind: "daily", time: /^\d{1,2}:\d{2}$/.test(form.time) ? form.time : "09:00", days: [...form.days] }
+
     await save({ name: form.name, prompt: form.prompt, directory: form.directory, every, enabled: true })
     setForm(blank())
     setEditing(false)

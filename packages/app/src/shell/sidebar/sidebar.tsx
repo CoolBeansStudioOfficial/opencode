@@ -116,7 +116,9 @@ export function SessionsSidebar(props: { sidebar: Controller }) {
                       onBlur={commitRename}
                       onKeyDown={(event) => {
                         event.stopPropagation()
+
                         if (event.key === "Enter") commitRename()
+
                         if (event.key === "Escape") setUI({ renaming: undefined })
                       }}
                     />

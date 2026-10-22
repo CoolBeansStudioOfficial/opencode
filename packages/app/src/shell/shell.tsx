@@ -1,3 +1,4 @@
+import { Schema } from "effect"
 import { onCleanup, onMount, Show, Suspense, type ParentProps } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createMediaQuery } from "@solid-primitives/media"
@@ -15,6 +16,9 @@ import { useCommand } from "@/shell/commands/command"
 import { useLanguage } from "@/runtime/i18n/language"
 import { createSessionsSidebar } from "@/shell/sidebar/controller"
 import { SessionsSidebar } from "@/shell/sidebar/sidebar"
+
+// The message public/push-sw.js posts when a push notification is tapped.
+const isPushOpen = Schema.is(Schema.Struct({ type: Schema.Literal("opencode.push.open"), sessionID: Schema.String }))
 
 export default function Layout(props: ParentProps) {
   const platform = usePlatform()
@@ -37,8 +41,7 @@ export default function Layout(props: ParentProps) {
     }
 
     const onMessage = (event: MessageEvent) => {
-      if (event.data?.type === "opencode.push.open" && typeof event.data.sessionID === "string")
-        void sidebar.openByID(event.data.sessionID)
+      if (isPushOpen(event.data)) void sidebar.openByID(event.data.sessionID)
     }
 
     navigator.serviceWorker?.addEventListener("message", onMessage)

@@ -11,6 +11,17 @@ import type { DesktopTheme } from "./types"
 
 export type ColorScheme = "light" | "dark" | "system"
 
+const colorSchemes = ["light", "dark", "system"] as const satisfies readonly ColorScheme[]
+
+type ThemeState = {
+  themes: Record<string, DesktopTheme>
+  themeId: string
+  colorScheme: ColorScheme
+  mode: "light" | "dark"
+  previewThemeId: string | null
+  previewScheme: ColorScheme | null
+}
+
 const STORAGE_KEYS = {
   THEME_ID: "opencode-theme-id",
   COLOR_SCHEME: "opencode-color-scheme",
@@ -49,46 +60,50 @@ function knownThemes() {
   return known
 }
 
-const names: Record<string, string> = {
-  "oc-2": "OpenCode",
-  amoled: "AMOLED",
-  aura: "Aura",
-  ayu: "Ayu",
-  carbonfox: "Carbonfox",
-  claude: "Claude",
-  catppuccin: "Catppuccin",
-  "catppuccin-frappe": "Catppuccin Frappe",
-  "catppuccin-macchiato": "Catppuccin Macchiato",
-  cobalt2: "Cobalt2",
-  cursor: "Cursor",
-  dracula: "Dracula",
-  everforest: "Everforest",
-  flexoki: "Flexoki",
-  github: "GitHub",
-  gruvbox: "Gruvbox",
-  kanagawa: "Kanagawa",
-  "lucent-orng": "Lucent Orng",
-  material: "Material",
-  matrix: "Matrix",
-  mercury: "Mercury",
-  monokai: "Monokai",
-  nightowl: "Night Owl",
-  nord: "Nord",
-  "one-dark": "One Dark",
-  onedarkpro: "One Dark Pro",
-  orng: "Orng",
-  "osaka-jade": "Osaka Jade",
-  palenight: "Palenight",
-  rosepine: "Rose Pine",
-  shadesofpurple: "Shades of Purple",
-  solarized: "Solarized",
-  synthwave84: "Synthwave '84",
-  tokyonight: "Tokyonight",
-  vercel: "Vercel",
-  vesper: "Vesper",
-  zenburn: "Zenburn",
-}
+const names = new Map(
+  Object.entries({
+    "oc-2": "OpenCode",
+    amoled: "AMOLED",
+    aura: "Aura",
+    ayu: "Ayu",
+    carbonfox: "Carbonfox",
+    claude: "Claude",
+    catppuccin: "Catppuccin",
+    "catppuccin-frappe": "Catppuccin Frappe",
+    "catppuccin-macchiato": "Catppuccin Macchiato",
+    cobalt2: "Cobalt2",
+    cursor: "Cursor",
+    dracula: "Dracula",
+    everforest: "Everforest",
+    flexoki: "Flexoki",
+    github: "GitHub",
+    gruvbox: "Gruvbox",
+    kanagawa: "Kanagawa",
+    "lucent-orng": "Lucent Orng",
+    material: "Material",
+    matrix: "Matrix",
+    mercury: "Mercury",
+    monokai: "Monokai",
+    nightowl: "Night Owl",
+    nord: "Nord",
+    "one-dark": "One Dark",
+    onedarkpro: "One Dark Pro",
+    orng: "Orng",
+    "osaka-jade": "Osaka Jade",
+    palenight: "Palenight",
+    rosepine: "Rose Pine",
+    shadesofpurple: "Shades of Purple",
+    solarized: "Solarized",
+    synthwave84: "Synthwave '84",
+    tokyonight: "Tokyonight",
+    vercel: "Vercel",
+    vesper: "Vesper",
+    zenburn: "Zenburn",
+  }),
+)
 
+// SAFETY: oc-2.json is authored against desktop-theme.schema.json (its "$schema"), the JSON form of DesktopTheme; the
+// JSON import only widens its color literals to string.
 const oc2Theme = oc2ThemeJson as DesktopTheme
 
 function resolveStoredTheme(id: string | null | undefined, registered?: Record<string, DesktopTheme>) {
@@ -97,8 +112,12 @@ function resolveStoredTheme(id: string | null | undefined, registered?: Record<s
   return "oc-2"
 }
 
+function parseColorScheme(value: string | null | undefined) {
+  return colorSchemes.find((scheme) => scheme === value)
+}
+
 function read(key: string) {
-  if (typeof localStorage !== "object") return null
+  if (typeof localStorage === "undefined") return null
 
   try {
     return localStorage.getItem(key)
@@ -108,7 +127,7 @@ function read(key: string) {
 }
 
 function write(key: string, value: string) {
-  if (typeof localStorage !== "object") return
+  if (typeof localStorage === "undefined") return
 
   try {
     localStorage.setItem(key, value)
@@ -116,7 +135,7 @@ function write(key: string, value: string) {
 }
 
 function drop(key: string) {
-  if (typeof localStorage !== "object") return
+  if (typeof localStorage === "undefined") return
 
   try {
     localStorage.removeItem(key)
@@ -129,9 +148,9 @@ function clear() {
 }
 
 function ensureThemeStyleElement(): HTMLStyleElement {
-  const existing = document.getElementById(THEME_STYLE_ID) as HTMLStyleElement | null
+  const existing = document.getElementById(THEME_STYLE_ID)
 
-  if (existing) return existing
+  if (existing instanceof HTMLStyleElement) return existing
   const element = document.createElement("style")
   element.id = THEME_STYLE_ID
   document.head.appendChild(element)
@@ -140,7 +159,7 @@ function ensureThemeStyleElement(): HTMLStyleElement {
 }
 
 function getSystemMode(): "light" | "dark" {
-  if (typeof window !== "object") return "light"
+  if (typeof window === "undefined") return "light"
 
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
 }
@@ -202,18 +221,18 @@ export const { use: useTheme, provider: ThemeProvider } = createSimpleContext({
       clear()
     }
 
-    const colorScheme = (read(STORAGE_KEYS.COLOR_SCHEME) as ColorScheme | null) ?? "system"
+    const colorScheme = parseColorScheme(read(STORAGE_KEYS.COLOR_SCHEME)) ?? "system"
     const mode = colorScheme === "system" ? getSystemMode() : colorScheme
 
-    const [store, setStore] = createStore({
+    const [store, setStore] = createStore<ThemeState>({
       themes: {
         "oc-2": oc2Theme,
-      } as Record<string, DesktopTheme>,
+      },
       themeId,
       colorScheme,
       mode,
-      previewThemeId: null as string | null,
-      previewScheme: null as ColorScheme | null,
+      previewThemeId: null,
+      previewScheme: null,
     })
 
     const loads = new Map<string, Promise<DesktopTheme | undefined>>()
@@ -290,9 +309,11 @@ export const { use: useTheme, provider: ThemeProvider } = createSimpleContext({
         })
       }
 
-      if (e.key === STORAGE_KEYS.COLOR_SCHEME && e.newValue) {
-        setStore("colorScheme", e.newValue as ColorScheme)
-        setStore("mode", e.newValue === "system" ? getSystemMode() : (e.newValue as "light" | "dark"))
+      const scheme = e.key === STORAGE_KEYS.COLOR_SCHEME ? parseColorScheme(e.newValue) : undefined
+
+      if (scheme) {
+        setStore("colorScheme", scheme)
+        setStore("mode", scheme === "system" ? getSystemMode() : scheme)
       }
     }
 
@@ -310,7 +331,7 @@ export const { use: useTheme, provider: ThemeProvider } = createSimpleContext({
 
       const rawTheme = read(STORAGE_KEYS.THEME_ID) ?? props.defaultTheme
       const savedTheme = resolveStoredTheme(rawTheme, store.themes)
-      const savedScheme = (read(STORAGE_KEYS.COLOR_SCHEME) as ColorScheme | null) ?? "system"
+      const savedScheme = parseColorScheme(read(STORAGE_KEYS.COLOR_SCHEME)) ?? "system"
 
       if (rawTheme && rawTheme !== savedTheme) {
         write(STORAGE_KEYS.THEME_ID, savedTheme)
@@ -376,7 +397,7 @@ export const { use: useTheme, provider: ThemeProvider } = createSimpleContext({
       colorScheme: () => store.colorScheme,
       mode: () => store.mode,
       ids,
-      name: (id: string) => store.themes[id]?.name ?? names[id] ?? id,
+      name: (id: string) => store.themes[id]?.name ?? names.get(id) ?? id,
       loadThemes,
       themes: () => store.themes,
       setTheme,

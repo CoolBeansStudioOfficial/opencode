@@ -44,6 +44,30 @@ Base: fork of [anomalyco/opencode](https://github.com/anomalyco/opencode) (MIT).
 | Browser pane | `plugin-browser` package exists, check | Pane UI |
 | Memory, scheduler | Missing | New build |
 
+## Status (2026-10-22)
+
+| Feature | Status | Where |
+|---|---|---|
+| Runs on native Windows | Done | `bun run dev:desktop`; Windows fixes in `FORK_DECISIONS.md` |
+| Provider presets | Done | DeepSeek, OpenRouter, Moonshot, Alibaba (Qwen), Z.AI lead every provider list |
+| Ponytail | Done | Installed globally in `~/.config/opencode/opencode.json` |
+| Permission modes | Done | Composer picker and Shift+Tab; enforced server-side |
+| Question cards | Done | Header chips, 1–4 questions, AskUserQuestion guidance |
+| Sessions sidebar | Done | Pins, groups, search, subagents nested under parents |
+| Claude theme, hidden tab bar | Done | Default for new installs; selectable in Settings |
+| Pinned task list | Done | Above the composer while tasks are open |
+| Remote access, PWA, web push | Done | `REMOTE_ACCESS.md`; per-device push switch in server settings |
+| Child sessions | Done | Nested in the sidebar; steerable while running |
+| Worktree per session | Done | Default for new sessions in Git projects |
+| Artifacts | Done | `artifact` tool opens files in the side panel; `.slides.md` decks |
+| Git commit, push, PR, CI checks | Done | Git button in the session header |
+| Memory | Done | `~/.config/opencode/memory/`, injected into every session |
+| Scheduled tasks | Done | Settings → server → Scheduled tasks, or the `schedule` tool |
+| `/compact` focus hint | Not started | |
+| Design canvas | Not started | |
+| Browser pane on web/phone | Not planned | Electron-only by design |
+| CI auto-fix / background PR watcher | Not started | Checks refresh on demand |
+
 ## Build order
 
 1. Get the fork building and running on native Windows.

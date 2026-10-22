@@ -40,6 +40,7 @@ export async function enablePush(api: ServerSDK["api"]) {
   const rpc = api.rpc(Push.Definition)
   const key = await rpc.key({})
   const existing = await worker.pushManager.getSubscription()
+
   // A subscription made for another server's key cannot receive this server's pushes.
   if (existing) await existing.unsubscribe()
   const created = await worker.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: applicationServerKey(key) })

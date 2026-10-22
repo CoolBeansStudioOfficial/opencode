@@ -37,81 +37,48 @@ import vercelThemeJson from "./themes/vercel.json"
 import vesperThemeJson from "./themes/vesper.json"
 import zenburnThemeJson from "./themes/zenburn.json"
 
-export const oc2Theme = oc2ThemeJson as DesktopTheme
+// SAFETY: every bundled ./themes/*.json file is authored against desktop-theme.schema.json (its "$schema"), the JSON
+// form of DesktopTheme. JSON imports widen its "#rrggbb" and "var(--…)" literals to string, which these assertions
+// narrow back; TypeScript still rejects a file whose structure does not overlap DesktopTheme.
+export const oc2Theme = oc2ThemeJson as DesktopTheme,
+  amoledTheme = amoledThemeJson as DesktopTheme,
+  auraTheme = auraThemeJson as DesktopTheme,
+  ayuTheme = ayuThemeJson as DesktopTheme,
+  carbonfoxTheme = carbonfoxThemeJson as DesktopTheme,
+  catppuccinTheme = catppuccinThemeJson as DesktopTheme,
+  catppuccinFrappeTheme = catppuccinFrappeThemeJson as DesktopTheme,
+  catppuccinMacchiatoTheme = catppuccinMacchiatoThemeJson as DesktopTheme,
+  cobalt2Theme = cobalt2ThemeJson as DesktopTheme,
+  cursorTheme = cursorThemeJson as DesktopTheme,
+  draculaTheme = draculaThemeJson as DesktopTheme,
+  everforestTheme = everforestThemeJson as DesktopTheme,
+  flexokiTheme = flexokiThemeJson as DesktopTheme,
+  claudeTheme = claudeThemeJson as DesktopTheme,
+  githubTheme = githubThemeJson as DesktopTheme,
+  gruvboxTheme = gruvboxThemeJson as DesktopTheme,
+  kanagawaTheme = kanagawaThemeJson as DesktopTheme,
+  lucentOrngTheme = lucentOrngThemeJson as DesktopTheme,
+  materialTheme = materialThemeJson as DesktopTheme,
+  matrixTheme = matrixThemeJson as DesktopTheme,
+  mercuryTheme = mercuryThemeJson as DesktopTheme,
+  monokaiTheme = monokaiThemeJson as DesktopTheme,
+  nightowlTheme = nightowlThemeJson as DesktopTheme,
+  nordTheme = nordThemeJson as DesktopTheme,
+  oneDarkTheme = oneDarkThemeJson as DesktopTheme,
+  oneDarkProTheme = oneDarkProThemeJson as DesktopTheme,
+  orngTheme = orngThemeJson as DesktopTheme,
+  osakaJadeTheme = osakaJadeThemeJson as DesktopTheme,
+  palenightTheme = palenightThemeJson as DesktopTheme,
+  rosepineTheme = rosepineThemeJson as DesktopTheme,
+  shadesOfPurpleTheme = shadesOfPurpleThemeJson as DesktopTheme,
+  solarizedTheme = solarizedThemeJson as DesktopTheme,
+  synthwave84Theme = synthwave84ThemeJson as DesktopTheme,
+  tokyonightTheme = tokyonightThemeJson as DesktopTheme,
+  vercelTheme = vercelThemeJson as DesktopTheme,
+  vesperTheme = vesperThemeJson as DesktopTheme,
+  zenburnTheme = zenburnThemeJson as DesktopTheme
 
-export const amoledTheme = amoledThemeJson as DesktopTheme
-
-export const auraTheme = auraThemeJson as DesktopTheme
-
-export const ayuTheme = ayuThemeJson as DesktopTheme
-
-export const carbonfoxTheme = carbonfoxThemeJson as DesktopTheme
-
-export const catppuccinTheme = catppuccinThemeJson as DesktopTheme
-
-export const catppuccinFrappeTheme = catppuccinFrappeThemeJson as DesktopTheme
-
-export const catppuccinMacchiatoTheme = catppuccinMacchiatoThemeJson as DesktopTheme
-
-export const cobalt2Theme = cobalt2ThemeJson as DesktopTheme
-
-export const cursorTheme = cursorThemeJson as DesktopTheme
-
-export const draculaTheme = draculaThemeJson as DesktopTheme
-
-export const everforestTheme = everforestThemeJson as DesktopTheme
-
-export const flexokiTheme = flexokiThemeJson as DesktopTheme
-
-export const claudeTheme = claudeThemeJson as DesktopTheme
-
-export const githubTheme = githubThemeJson as DesktopTheme
-
-export const gruvboxTheme = gruvboxThemeJson as DesktopTheme
-
-export const kanagawaTheme = kanagawaThemeJson as DesktopTheme
-
-export const lucentOrngTheme = lucentOrngThemeJson as DesktopTheme
-
-export const materialTheme = materialThemeJson as DesktopTheme
-
-export const matrixTheme = matrixThemeJson as DesktopTheme
-
-export const mercuryTheme = mercuryThemeJson as DesktopTheme
-
-export const monokaiTheme = monokaiThemeJson as DesktopTheme
-
-export const nightowlTheme = nightowlThemeJson as DesktopTheme
-
-export const nordTheme = nordThemeJson as DesktopTheme
-
-export const oneDarkTheme = oneDarkThemeJson as DesktopTheme
-
-export const oneDarkProTheme = oneDarkProThemeJson as DesktopTheme
-
-export const orngTheme = orngThemeJson as DesktopTheme
-
-export const osakaJadeTheme = osakaJadeThemeJson as DesktopTheme
-
-export const palenightTheme = palenightThemeJson as DesktopTheme
-
-export const rosepineTheme = rosepineThemeJson as DesktopTheme
-
-export const shadesOfPurpleTheme = shadesOfPurpleThemeJson as DesktopTheme
-
-export const solarizedTheme = solarizedThemeJson as DesktopTheme
-
-export const synthwave84Theme = synthwave84ThemeJson as DesktopTheme
-
-export const tokyonightTheme = tokyonightThemeJson as DesktopTheme
-
-export const vercelTheme = vercelThemeJson as DesktopTheme
-
-export const vesperTheme = vesperThemeJson as DesktopTheme
-
-export const zenburnTheme = zenburnThemeJson as DesktopTheme
-
-export const DEFAULT_THEMES: Record<string, DesktopTheme> = {
+export const DEFAULT_THEMES = {
   "oc-2": oc2Theme,
   amoled: amoledTheme,
   aura: auraTheme,
@@ -149,4 +116,4 @@ export const DEFAULT_THEMES: Record<string, DesktopTheme> = {
   vercel: vercelTheme,
   vesper: vesperTheme,
   zenburn: zenburnTheme,
-}
+} satisfies Record<string, DesktopTheme>

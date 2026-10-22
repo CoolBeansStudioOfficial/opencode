@@ -11,12 +11,16 @@ import { showToast } from "@/shell/notifications/toast"
 // Fork: Claude-style permission modes. Core's permission-mode plugin enforces the mode stored in session
 // metadata under this key; keep the two lists in sync.
 export const permissionModeKey = "permissionMode"
+
 export const permissionModes = ["default", "acceptEdits", "plan", "auto", "bypass"] as const
+
 export type PermissionMode = (typeof permissionModes)[number]
 
-const isPermissionMode = (value: unknown): value is PermissionMode => permissionModes.includes(value as PermissionMode)
+const PermissionModeValue = Schema.Literals(permissionModes)
 
-const PermissionModeSchema = Schema.Struct({ mode: Schema.Literals(permissionModes) })
+export const isPermissionMode = Schema.is(PermissionModeValue)
+
+const PermissionModeSchema = Schema.Struct({ mode: PermissionModeValue })
 
 // New sessions start in the last mode the user picked, as in Claude.
 export function usePermissionModeDraft() {
@@ -37,6 +41,7 @@ export function usePermissionMode() {
 
   const current = createMemo((): PermissionMode => {
     const info = session()
+
     if (!info) return draft.mode()
     const mode = info.metadata?.[permissionModeKey]
 
@@ -52,15 +57,12 @@ export function usePermissionMode() {
     else if (previous === "plan" && local.agent.current()?.name === "plan") local.agent.set("build")
 
     const info = session()
+
     if (!info) return
     void serverSDK.api.session
       .update({ sessionID: info.id, metadata: { ...info.metadata, [permissionModeKey]: mode } })
-      .catch((error: unknown) =>
-        showToast({
-          variant: "error",
-          title: language.t("common.requestFailed"),
-          description: error instanceof Error ? error.message : String(error),
-        }),
+      .catch((error: Error) =>
+        showToast({ variant: "error", title: language.t("common.requestFailed"), description: error.message }),
       )
   }
 

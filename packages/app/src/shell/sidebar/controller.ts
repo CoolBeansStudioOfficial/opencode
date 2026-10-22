@@ -66,6 +66,7 @@ export function createSessionsSidebar() {
     const ctx = home.server.focusedContext()
 
     if (!ctx) return []
+
     const sessions = retainHomeSessions(
       ctx.data.session.apply(
         mergeHomeSessionIndex(sessionLoad.isPending ? [] : (sessionLoad.data?.() ?? []), ctx.data.session.list()),

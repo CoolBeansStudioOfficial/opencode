@@ -26,7 +26,7 @@ import { createComposerHistory } from "./history/store"
 import { createComposerSubmit } from "./submit"
 import { useAttachmentDestination } from "./attachments/destination"
 import { parseClientSlashCommand } from "./client-slash-command"
-import { permissionModes, usePermissionMode, type PermissionMode } from "./permission-mode"
+import { isPermissionMode, permissionModes, usePermissionMode } from "./permission-mode"
 
 export type ComposerModel = ComposerEditorModel & {
   readonly model: ComposerControls["model"]
@@ -394,7 +394,9 @@ export function createComposerModel(adapter: ComposerAdapter, options?: { queue?
         title: () => language.t("composer.permissionMode.choose"),
         options: () => permissionModes.map((mode) => ({ id: mode, label: permissionMode.label(mode) })),
         current: permissionMode.current,
-        onSelect: (value: string) => permissionMode.set(value as PermissionMode),
+        onSelect: (value: string) => {
+          if (isPermissionMode(value)) permissionMode.set(value)
+        },
       },
       get agent() {
         const agents = adapter.controls().agents

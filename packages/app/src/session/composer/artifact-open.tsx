@@ -1,8 +1,11 @@
 import type { SessionMessageInfo } from "@opencode/client/promise"
+import { Schema } from "effect"
 import { createEffect, on } from "solid-js"
 import { useExtensionHost } from "@/runtime/extension/host"
 import { useExtensionAttachment } from "@/runtime/extension/host-apis"
 import { useData } from "@/runtime/server/current"
+
+const isArtifactMetadata = Schema.is(Schema.Struct({ path: Schema.String }))
 
 /** Paths of `artifact` tool calls that completed at or after `since`, oldest first. */
 export function newArtifacts(messages: readonly SessionMessageInfo[], since: number) {
@@ -11,10 +14,10 @@ export function newArtifacts(messages: readonly SessionMessageInfo[], since: num
       ? []
       : message.content.flatMap((content) => {
           if (content.type !== "tool" || content.name !== "artifact" || content.state.status !== "completed") return []
-          const path = content.state.metadata?.path
+          const metadata = content.state.metadata
           const completed = content.time.completed ?? 0
 
-          return typeof path === "string" && completed >= since ? [{ id: content.id, path }] : []
+          return isArtifactMetadata(metadata) && completed >= since ? [{ id: content.id, path: metadata.path }] : []
         }),
   )
 }

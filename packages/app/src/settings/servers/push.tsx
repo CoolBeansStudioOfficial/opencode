@@ -17,12 +17,8 @@ export function ServerPushSetting(props: { server: ServerConnection.Any }) {
 
   const api = () => global.ensureServerCtx(props.server).sdk.api
 
-  const fail = (error: unknown) =>
-    showToast({
-      variant: "error",
-      title: language.t("common.requestFailed"),
-      description: error instanceof Error ? error.message : String(error),
-    })
+  const fail = (error: Error) =>
+    showToast({ variant: "error", title: language.t("common.requestFailed"), description: error.message })
 
   const toggle = async (checked: boolean) => {
     setBusy(true)
@@ -35,7 +31,9 @@ export function ServerPushSetting(props: { server: ServerConnection.Any }) {
     const value = state.latest
 
     if (value === "unsupported") return language.t("settings.server.push.unsupported")
+
     if (value === "no-worker") return language.t("settings.server.push.noWorker")
+
     if (value === "denied") return language.t("settings.server.push.denied")
 
     return language.t("settings.server.push.description")
