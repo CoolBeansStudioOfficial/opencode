@@ -8,19 +8,44 @@ import { ResizeHandle } from "@opencode/ui/resize-handle"
 import { ScrollView } from "@opencode/ui/scroll-view"
 import type { HomeSessionRecord } from "@/home/sessions/records"
 import { HomeSessionStatusController } from "@/home/sessions/controller"
-import { SessionTabAvatarView } from "@/shell/layout/session-tab-avatar"
 import { sessionLabel } from "@/session/title"
+import { useSettingsSurface } from "@/settings/surface"
+import { getRelativeTime } from "@/shell/time"
 import type { SessionsSidebar as Controller } from "./controller"
 
 // Rename inputs take focus as a menu closes; restoring focus to the trigger would blur them.
 const keepFocus = (event: Event) => event.preventDefault()
 
-const SECTION_LABEL = "text-[12px] leading-4 text-v2-text-text-faint [font-weight:530]"
+const SECTION_LABEL = "text-[12px] leading-4 text-v2-text-text-faint [font-weight:500]"
+
+const NAV_ITEM =
+  "flex h-8 w-full shrink-0 items-center gap-2.5 rounded-[8px] px-2 text-[13px] leading-4 text-v2-text-text-base hover:bg-v2-overlay-simple-overlay-hover disabled:opacity-50 data-[active=true]:bg-v2-overlay-simple-overlay-hover"
 
 export function SessionsSidebar(props: { sidebar: Controller }) {
   const sidebar = props.sidebar
   const t = sidebar.language.t
-  const [ui, setUI] = createStore<{ renaming?: string; draft: string }>({ draft: "" })
+  const settings = useSettingsSurface()
+  const [ui, setUI] = createStore<{ renaming?: string; draft: string; searching: boolean }>({ draft: "", searching: false })
+
+  const toggleSearch = () => {
+    setUI("searching", !ui.searching)
+
+    if (ui.searching) requestAnimationFrame(() => document.querySelector<HTMLInputElement>('[data-slot="sidebar-search"]')?.focus())
+    else sidebar.query.set("")
+  }
+
+  const openScheduled = () => {
+    const server = sidebar.server()
+
+    if (server) settings.openServer(server)
+    else settings.open()
+  }
+
+  const serverName = () => {
+    const server = sidebar.server()
+
+    return server ? (URL.canParse(server) ? new URL(server).host : server) : "OpenCode"
+  }
 
   const startRename = (id: string, name: string) => {
     setUI({ renaming: id, draft: name })
@@ -59,33 +84,49 @@ export function SessionsSidebar(props: { sidebar: Controller }) {
         max={480}
         onResize={sidebar.resize}
       />
-      <button
-        type="button"
-        data-action="sidebar-new-session"
-        disabled={!sidebar.canCreate()}
-        class="flex h-8 w-full shrink-0 items-center gap-2 rounded-[6px] px-2 text-[13px] text-v2-text-text-base [font-weight:530] hover:bg-v2-overlay-simple-overlay-hover disabled:opacity-50"
-        onClick={sidebar.newSession}
-      >
-        <Icon name="edit" class="shrink-0" />
-        <span class="truncate">{t("command.session.new")}</span>
-      </button>
-      <label class="flex h-8 shrink-0 items-center gap-2 rounded-[6px] bg-v2-background-bg-base px-2 text-v2-text-text-faint">
-        <Icon name="magnifying-glass" class="shrink-0" />
-        <input
-          type="search"
-          data-slot="sidebar-search"
-          value={sidebar.query.value()}
-          placeholder={t("sidebar.sessions.search")}
-          aria-label={t("sidebar.sessions.search")}
-          class="min-w-0 flex-1 bg-transparent text-[13px] text-v2-text-text-base outline-none placeholder:text-v2-text-text-faint"
-          onInput={(event) => sidebar.query.set(event.currentTarget.value)}
-          onKeyDown={(event) => {
-            if (event.key !== "Escape") return
-            sidebar.query.set("")
-            event.currentTarget.blur()
-          }}
-        />
-      </label>
+      <nav data-slot="sidebar-nav" class="flex shrink-0 flex-col gap-0.5">
+        <button
+          type="button"
+          data-action="sidebar-new-session"
+          disabled={!sidebar.canCreate()}
+          class={NAV_ITEM}
+          onClick={sidebar.newSession}
+        >
+          <Icon name="edit" class="shrink-0" />
+          <span class="truncate">{t("command.session.new")}</span>
+        </button>
+        {/* Artifacts nav entry belongs directly under "New session" (added with the artifacts work). */}
+        <button type="button" data-action="sidebar-search" data-active={ui.searching} class={NAV_ITEM} onClick={toggleSearch}>
+          <Icon name="magnifying-glass" class="shrink-0" />
+          <span class="truncate">{t("sidebar.nav.search")}</span>
+        </button>
+        <button type="button" data-action="sidebar-scheduled" class={NAV_ITEM} onClick={openScheduled}>
+          <Icon name="clock" class="shrink-0" />
+          <span class="truncate">{t("sidebar.nav.scheduled")}</span>
+        </button>
+        <button type="button" data-action="sidebar-customize" class={NAV_ITEM} onClick={() => settings.open()}>
+          <Icon name="outline-sliders" class="shrink-0" />
+          <span class="truncate">{t("sidebar.nav.customize")}</span>
+        </button>
+      </nav>
+      <Show when={ui.searching}>
+        <label class="flex h-8 shrink-0 items-center gap-2 rounded-[8px] bg-v2-background-bg-base px-2 text-v2-text-text-faint shadow-[inset_0_0_0_1px_var(--v2-border-border-base)]">
+          <Icon name="magnifying-glass" class="shrink-0" />
+          <input
+            type="search"
+            data-slot="sidebar-search"
+            value={sidebar.query.value()}
+            placeholder={t("sidebar.sessions.search")}
+            aria-label={t("sidebar.sessions.search")}
+            class="min-w-0 flex-1 bg-transparent text-[13px] text-v2-text-text-base outline-none placeholder:text-v2-text-text-faint"
+            onInput={(event) => sidebar.query.set(event.currentTarget.value)}
+            onKeyDown={(event) => {
+              if (event.key !== "Escape") return
+              toggleSearch()
+            }}
+          />
+        </label>
+      </Show>
       <ScrollView class="min-h-0 flex-1">
         <div class="flex flex-col gap-3 pb-2 pe-1">
           <Show when={sidebar.pinned().length > 0}>
@@ -182,6 +223,20 @@ export function SessionsSidebar(props: { sidebar: Controller }) {
           </Section>
         </div>
       </ScrollView>
+      <div data-slot="sidebar-footer" class="flex h-11 shrink-0 items-center gap-2 border-t border-v2-border-border-muted px-1.5 pt-1">
+        <span class="flex size-7 shrink-0 items-center justify-center rounded-full bg-v2-background-bg-accent text-[12px] leading-4 text-white [font-weight:500]">
+          {serverName().charAt(0).toUpperCase()}
+        </span>
+        <span class="min-w-0 flex-1 truncate text-[13px] leading-4 text-v2-text-text-base">{serverName()}</span>
+        <IconButton
+          type="button"
+          variant="ghost-muted"
+          size="small"
+          icon={<Icon name="settings-gear" />}
+          aria-label={t("command.settings.open")}
+          onClick={() => settings.open()}
+        />
+      </div>
     </aside>
   )
 }
@@ -255,6 +310,8 @@ function SessionRow(props: { sidebar: Controller; record: HomeSessionRecord; onN
   )
 
   const id = () => props.record.session.id
+  const relative = () =>
+    getRelativeTime(new Date(props.record.session.time.updated ?? props.record.session.time.created).toISOString(), t)
   const children = () => sidebar.children(id())
 
   return (
@@ -265,15 +322,23 @@ function SessionRow(props: { sidebar: Controller; record: HomeSessionRecord; onN
         data-component="sidebar-session-row"
         data-session-id={props.record.session.id}
         data-active={active()}
-        class="group/row relative flex h-8 min-w-0 items-center rounded-[6px] hover:bg-v2-overlay-simple-overlay-hover data-[active=true]:bg-v2-overlay-simple-overlay-hover"
+        class="group/row relative flex min-h-[44px] min-w-0 items-center rounded-[8px] hover:bg-v2-overlay-simple-overlay-hover data-[active=true]:bg-v2-overlay-simple-overlay-hover"
       >
         <button
           type="button"
-          class="flex h-8 min-w-0 flex-1 items-center gap-2 bg-transparent ps-2 pe-8 text-start text-[13px]"
+          class="flex min-h-[44px] min-w-0 flex-1 items-center gap-2 bg-transparent py-1.5 ps-2.5 pe-14 text-start text-[13px]"
           classList={{ "text-v2-text-text-base": active(), "text-v2-text-text-muted": !active() }}
           aria-current={active() ? "page" : undefined}
           onClick={() => sidebar.open(props.record)}
         >
+          <span class="flex min-w-0 flex-1 flex-col">
+            <span dir="auto" class="truncate leading-4">
+              {sessionLabel(props.record.session)}
+            </span>
+            <span class="truncate text-[11.5px] leading-4 text-v2-text-text-faint">
+              {props.record.projectName} · {relative()}
+            </span>
+          </span>
           <Show when={sidebar.server()}>
             {(server) => (
               <HomeSessionStatusController
@@ -281,21 +346,21 @@ function SessionRow(props: { sidebar: Controller; record: HomeSessionRecord; onN
                 record={props.record}
                 isOpenTab={() => false}
                 render={(state) => (
-                  <span class="flex size-4 shrink-0 items-center justify-center">
-                    <SessionTabAvatarView
-                      project={props.record.project}
-                      directory={props.record.session.location.directory}
-                      unread={state.unread()}
-                      loading={state.loading()}
+                  <Show when={state.loading() || state.unread()}>
+                    <span
+                      aria-hidden="true"
+                      data-slot="session-status-dot"
+                      class="size-2 shrink-0 rounded-full"
+                      classList={{
+                        "bg-v2-background-bg-accent animate-pulse": state.loading(),
+                        "bg-v2-state-fg-info": !state.loading() && state.unread(),
+                      }}
                     />
-                  </span>
+                  </Show>
                 )}
               />
             )}
           </Show>
-          <span dir="auto" class="min-w-0 flex-1 truncate">
-            {sessionLabel(props.record.session)}
-          </span>
         </button>
         <div class="absolute end-1 flex items-center">
           <IconButton
@@ -308,6 +373,16 @@ function SessionRow(props: { sidebar: Controller; record: HomeSessionRecord; onN
             aria-expanded={sidebar.isExpanded(id())}
             aria-label={t("sidebar.sessions.subagents")}
             onClick={() => sidebar.toggleExpanded(id())}
+          />
+          <IconButton
+            type="button"
+            variant="ghost-muted"
+            size="small"
+            class="opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100"
+            classList={{ "opacity-100!": sidebar.isPinned(props.record) }}
+            icon={<Icon name="pin" />}
+            aria-label={sidebar.isPinned(props.record) ? t("sidebar.sessions.unpin") : t("sidebar.sessions.pin")}
+            onClick={() => (sidebar.isPinned(props.record) ? sidebar.unpin(props.record) : sidebar.pin(props.record))}
           />
           <div class="opacity-0 group-hover/row:opacity-100 focus-within:opacity-100">
           <Menu modal={false} placement="bottom-end" gutter={2}>

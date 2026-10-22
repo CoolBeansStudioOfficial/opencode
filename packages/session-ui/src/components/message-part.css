@@ -1291,7 +1291,8 @@
 }
 
 :root body [data-local-session] [data-component="user-message"] [data-slot="user-message-text"] {
-  border-radius: 8px;
+  border-radius: 14px;
+  padding: 10px 14px;
 }
 
 :root[data-color-scheme="light"]
@@ -1299,8 +1300,9 @@
   [data-local-session]
   [data-component="user-message"]:not([data-pending])
   [data-slot="user-message-text"] {
-  background: var(--v2-blue-100);
-  color: var(--v2-blue-700);
+  /* Claude desktop: a soft neutral bubble, not an accent tint. */
+  background: var(--v2-background-bg-layer-01);
+  color: var(--v2-text-text-base);
 }
 
 :root[data-color-scheme="dark"]
@@ -1308,8 +1310,8 @@
   [data-local-session]
   [data-component="user-message"]:not([data-pending])
   [data-slot="user-message-text"] {
-  background: var(--v2-blue-1200);
-  color: var(--v2-blue-300);
+  background: var(--v2-background-bg-layer-01);
+  color: var(--v2-text-text-base);
 }
 
 /* Only delivery animates. A steer can render once before its admission marks it pending, and must not fade from the

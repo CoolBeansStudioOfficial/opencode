@@ -576,3 +576,36 @@
     padding-block: 0;
   }
 }
+
+/* Fork: Claude desktop fidelity. Composer is a large rounded card with a hairline and a soft shadow; send is a round orange button. */
+[data-component="composer"] {
+  border-radius: 20px;
+  box-shadow:
+    0 0 0 1px var(--v2-border-border-base),
+    0 4px 24px -6px rgb(0 0 0 / 0.08);
+}
+
+[data-component="icon-button-v2"][data-action="composer-submit"] {
+  border-radius: 9999px;
+  background-image: none;
+  background-color: #c96442;
+  color: #fff;
+  text-shadow: none;
+  box-shadow: none;
+}
+
+@media (hover: hover) {
+  [data-component="icon-button-v2"][data-action="composer-submit"]:hover:not(:disabled) {
+    background-image: none;
+    background-color: #b5573a;
+  }
+}
+
+[data-component="icon-button-v2"][data-action="composer-submit"]:disabled {
+  background-color: var(--v2-background-bg-layer-03);
+  color: var(--v2-text-text-faint);
+}
+
+[data-component="new-session-greeting"] {
+  font-family: Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
+}

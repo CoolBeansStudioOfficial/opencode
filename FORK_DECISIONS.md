@@ -38,3 +38,10 @@ Judgment calls made while building the fork without the owner present. Each entr
 - **The design system is the project's own stylesheet**: the manifest's `system` points at a real CSS file, and its custom properties show in the canvas "System" panel. Nothing is copied.
 - **Export**: each frame has an "Open" link to the real page (save or print it to PDF from the browser). There's no PNG export yet.
 - **Symlinked repo files are real copies on this PC** (Windows without Developer Mode). They are marked `skip-worktree`, so Git ignores local changes to them.
+
+## Claude desktop look (UI pass 1)
+
+- **Could not screenshot Claude Desktop.** Computer use was not available in this session, so the pass follows the written description of the Code tab; compare against the real app before calling it done.
+- **Sidebar**: nav rows New session / Search / Scheduled / Customize (Search reveals the filter box; Scheduled opens server Preferences, where scheduled tasks live; a marked spot under New session is reserved for Artifacts). Session rows are two lines (title, then project and relative time), with a pulsing orange dot while running, a blue dot when unread, and pin plus menu on hover. The footer shows the server and a settings gear (there is no user account name to show).
+- **User messages** are a neutral soft bubble (14px radius) instead of an accent tint. The composer is a 20px card with a hairline and soft shadow and a round orange send button. The new-session screen greets with a serif line ("Good afternoon") instead of the logo wordmark; the serif is only used there.
+- **Not done yet**: "Needs input" amber dot, "Reply…" placeholder inside a session, top-bar Preview/Diff/Terminal icon row, permission pill restyle, Settings left-nav restyle, dark-mode check. Added `pin` and `clock` icons to the shared catalog.
