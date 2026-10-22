@@ -27,7 +27,6 @@ import { parseVoiceDelegation } from "./voice-delegation"
 import { useCommand } from "@/shell/commands/command"
 import { SessionAncestorTrail, SessionProjectMenu, SessionTitleHeader } from "../session-identity-header"
 import { SessionHeaderSpacer } from "@/session/header/session-header"
-import { SessionPaneButtons } from "@/session/header/session-pane-buttons"
 import { SessionRunningMenu } from "@/session/header/session-running-menu"
 import { SessionGitButton } from "@/session/git/git-dialog"
 
@@ -611,7 +610,6 @@ function MessageTimelineView(
                     <Show when={!parentID()}>
                       <SessionGitButton directory={() => props.view.directory} />
                     </Show>
-                    <SessionPaneButtons />
                     <ExtensionSlot
                       at="session.header"
                       input={{

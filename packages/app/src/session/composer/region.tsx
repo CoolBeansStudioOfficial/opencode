@@ -35,6 +35,7 @@ import { resolveSessionComposerSelection } from "./selection"
 import { createSessionRequestModel } from "../requests/model"
 import type { Region } from "@/runtime/extension/panels"
 import { SessionLocationMissing } from "./location-missing"
+import { SessionContextRing } from "../info/context"
 
 export function createActiveSessionRegion(input: {
   session: SessionModel
@@ -364,6 +365,10 @@ export function ActiveSessionComposerRegion(props: {
                   borderUnderlay
                   readOnly={props.model.queue.undoing()}
                   suggestionBoundary={props.suggestionBoundary}
+                />
+                <SessionContextRing
+                  sessionID={props.session.identity.params.id ?? ""}
+                  directory={props.session.data.info()?.location.directory}
                 />
               </div>
             </div>

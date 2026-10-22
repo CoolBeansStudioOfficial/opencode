@@ -1,5 +1,4 @@
 import { GitActions } from "@opencode/schema/git-actions"
-import { lastAssistantWithUsage } from "@opencode/client/solid"
 import { Button } from "@opencode/ui/button"
 import { useDialog } from "@opencode/ui/context/dialog"
 import { Icon, type IconProps } from "@opencode/ui/icon"
@@ -9,6 +8,7 @@ import { usePermissionMode } from "@/composer/permission-mode"
 import { useLanguage } from "@/runtime/i18n/language"
 import { useServerSDK } from "@/runtime/server/client"
 import { useServer } from "@/runtime/server/current"
+import { useSessionContext } from "./context"
 import { GitDialog } from "@/session/git/git-dialog"
 import { useOpenSessionRoute } from "@/session/session-identity-header"
 import { sessionTitle } from "@/session/title"
@@ -25,7 +25,6 @@ export function SessionInfoColumn(props: { sessionID: string; directory?: string
 
   const session = () => server.ctx.data.session
   const messages = createMemo(() => session().message.list(props.sessionID))
-  const info = createMemo(() => session().get(props.sessionID))
   const folder = () => props.directory?.split(/[\\/]/).filter(Boolean).at(-1) ?? ""
 
   const [git] = createResource(
@@ -46,23 +45,10 @@ export function SessionInfoColumn(props: { sessionID: string; directory?: string
         .catch(() => undefined),
   )
 
-  const context = createMemo(() => {
-    const message = lastAssistantWithUsage(messages(), info()?.revert?.messageID)
-
-    if (!message) return
-    const ref = props.directory ? { directory: props.directory } : undefined
-    const model = server.ctx.data.location.model
-      .list(ref)
-      ?.findLast((item) => item.providerID === message.model.providerID && item.id === message.model.id)
-    const total =
-      message.tokens.input +
-      message.tokens.output +
-      message.tokens.reasoning +
-      message.tokens.cache.read +
-      message.tokens.cache.write
-
-    return model?.limit.context ? Math.min(100, Math.round((total / model.limit.context) * 100)) : undefined
-  })
+  const context = useSessionContext(
+    () => props.sessionID,
+    () => props.directory,
+  )
 
   // Files the agent wrote or edited in this session, newest first.
   const outputs = createMemo(() => {

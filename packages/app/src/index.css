@@ -636,3 +636,45 @@
   vertical-align: -0.05em;
   color: #d77858;
 }
+
+/* Claude desktop: mode, model and effort are plain text under the card. */
+[data-slot="composer-below"] button {
+  background: transparent;
+  box-shadow: none;
+  color: var(--v2-text-text-muted);
+  font-weight: 400;
+}
+
+[data-slot="composer-below"] button:hover {
+  background: transparent;
+  color: var(--v2-text-text-base);
+}
+
+[data-slot="composer-below"] button svg,
+[data-slot="composer-below"] button img,
+[data-slot="composer-below"] button [data-component="provider-icon"] {
+  display: none;
+}
+
+[data-slot="composer-below"] [data-slot="composer-controls"] {
+  margin-inline-end: 28px;
+}
+
+@media (max-width: 480px) {
+  [data-slot="composer-below"] [data-slot="composer-controls"] > div {
+    gap: 0;
+  }
+
+  [data-slot="composer-below"] button {
+    max-width: 120px;
+    padding-inline: 6px;
+  }
+}
+
+/* Claude desktop: collapsed tool rows ("Used 3 tools") are muted one-liners, not bold. */
+[data-component="context-tool-group-trigger"] [data-slot="context-tool-group-count"],
+[data-component="context-tool-group-trigger"] [data-slot="basic-tool-tool-title"],
+[data-component="context-tool-group-trigger"] [data-slot="context-tool-group-usage"] {
+  color: var(--v2-text-text-muted);
+  font-weight: 400;
+}

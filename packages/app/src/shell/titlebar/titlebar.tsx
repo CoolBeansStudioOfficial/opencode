@@ -13,6 +13,8 @@ import { useCommand } from "@/shell/commands/command"
 import { useLanguage } from "@/runtime/i18n/language"
 import { useSettings } from "@/settings/model"
 import { WindowsAppMenu } from "./windows-menu"
+import { TitlebarNav } from "./titlebar-nav"
+import { SessionPaneButtons } from "@/session/header/session-pane-buttons"
 import { applyPath, backPath, forwardPath, type HistoryLocation } from "./history"
 import { TitlebarTabStrip } from "@/shell/titlebar/tab-strip"
 import { makeEventListener } from "@solid-primitives/event-listener"
@@ -541,7 +543,10 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement }; hideTa
                 <Show when={windows() || linux()}>
                   <WindowsAppMenu command={command} platform={platform} />
                 </Show>
-                <Show when={!mobile() && !props.verticalTabs}>{homeButton()}</Show>
+                <Show when={!mobile()}>
+                  <TitlebarNav menu={!windows() && !linux()} back={back} forward={forward} />
+                </Show>
+                <Show when={!mobile() && !props.verticalTabs && !props.hideTabs}>{homeButton()}</Show>
 
                 <Show
                   when={!mobile()}
@@ -766,6 +771,9 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement }; hideTa
                 </Show>
                 <Show when={!props.verticalTabs}>
                   <div class="relative z-20 flex shrink-0 items-center justify-end gap-0 overflow-visible">
+                    <Show when={!mobile() && layout.route().type === "session"}>
+                      <SessionPaneButtons />
+                    </Show>
                     <TitlebarItems items={titlebarItems} />
                     <TitlebarRightMount />
                   </div>
