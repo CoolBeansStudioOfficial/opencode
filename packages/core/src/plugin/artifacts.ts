@@ -123,7 +123,8 @@ export function make(ctx: Context) {
         ...(title ? { title } : {}),
         ...(input.sessionID && !base.sessionID ? { sessionID: input.sessionID } : {}),
       }
-      return publicEntry(yield* refresh(next))
+      const changed = next.title !== base.title || next.sessionID !== base.sessionID
+      return publicEntry(yield* refresh(changed && existing ? yield* save(next) : next))
     }).pipe(Effect.orDie)
 
   const list = Effect.gen(function* () {
