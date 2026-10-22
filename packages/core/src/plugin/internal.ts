@@ -96,6 +96,7 @@ import { IdentityPlugin } from "./identity.js"
 import { PlanPlugin } from "./plan.js"
 import { PermissionModePlugin } from "./permission-mode.js"
 import { WebPushPlugin } from "./web-push.js"
+import { GitActionsPlugin } from "./git-actions.js"
 import { ModelsDevPlugin } from "./models-dev.js"
 import { McpCodeModeDefaultsPlugin } from "./mcp-codemode-defaults.js"
 import { ProviderPlugins } from "./provider.js"
@@ -231,6 +232,7 @@ const pre = [
   PlanPlugin.Plugin,
   PermissionModePlugin.Plugin,
   WebPushPlugin.Plugin,
+  GitActionsPlugin.Plugin,
   CommandPlugin.Plugin,
   SkillPlugin.Plugin,
   VcsHgPlugin.Plugin,
