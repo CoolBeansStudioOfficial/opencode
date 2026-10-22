@@ -30,3 +30,12 @@ test("keyframes run from the dim rest to fully lit", () => {
     "@keyframes spinner-radar{0%{opacity:0.2;animation-timing-function:cubic-bezier(.45,0,.2,1)}3%{opacity:1;animation-timing-function:cubic-bezier(.45,0,.2,1)}51%{opacity:0.2;animation-timing-function:cubic-bezier(.45,0,.2,1)}100%{opacity:0.2;animation-timing-function:cubic-bezier(.45,0,.2,1)}}",
   )
 })
+
+test("the smooth radar rises across the gap between neighbouring dots on both rings, linearly", () => {
+  const variant = spinnerVariants.radarSmooth
+  const rise = variant.stops.find(([, level]) => level === 1)![0]
+
+  // The inner ring has eight dots, an eighth of the loop apart: a dot still rising when its neighbour starts.
+  expect(rise).toBeGreaterThan(100 / 8)
+  expect(spinnerKeyframes("spinner-radarSmooth", variant)).not.toContain("cubic-bezier")
+})

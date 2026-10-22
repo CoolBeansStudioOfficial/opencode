@@ -26,7 +26,7 @@ const crcTable = Array.from({ length: 256 }, (_, value) =>
   Array.from({ length: 8 }).reduce<number>((crc) => ((crc & 1) !== 0 ? 0xedb88320 ^ (crc >>> 1) : crc >>> 1), value),
 )
 
-await Bun.write(new URL("../src/v2/components/session-progress-indicator-v2-1x.png", import.meta.url), apng(1))
+await Bun.write(new URL("../src/components/spinner.png", import.meta.url), apng(1))
 
 function apng(scale: number) {
   const frameSize = size * scale

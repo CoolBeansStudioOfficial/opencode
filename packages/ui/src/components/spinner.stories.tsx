@@ -6,8 +6,9 @@ Animated loading indicator for inline or page-level loading states. Tabs, \`Load
 titlebar update button all render it.
 
 ### Variants and states
-- Today: the 5×5 radar sweep from an animated PNG mask.
-- Dot-matrix variations to try from Knobs → Experiments → Activity spinner; a \`variant\` prop pins one.
+- Soft Radar by default; Soft Radar (smooth) glides its sweep head between dots instead of stepping.
+- Today (the 5×5 PNG radar) and the other dot-matrix variations from Knobs → Experiments → Activity spinner; a
+  \`variant\` prop pins one.
 
 ### Behavior
 - CSS animation only. Every dot of a variation shares one loop, and \`syncSpinPhase\` pins every instance to the
@@ -25,7 +26,7 @@ export default {
   id: "components-spinner",
   component: Spinner,
   tags: ["autodocs"],
-  args: { variant: "today", speed: 1, size: 16 },
+  args: { variant: "radar", speed: 1, size: 16 },
   argTypes: {
     variant: { control: "select", options: ["today", ...Object.keys(spinnerVariants)] },
     speed: { control: { type: "range", min: 0.25, max: 2, step: 0.05 } },
@@ -49,6 +50,8 @@ export default {
 export const Today = { args: { variant: "today" } }
 
 export const SoftRadar = { args: { variant: "radar" } }
+
+export const SoftRadarSmooth = { args: { variant: "radarSmooth" } }
 
 export const OrbRadar = { args: { variant: "orbRadar" } }
 

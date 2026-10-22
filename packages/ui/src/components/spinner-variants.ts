@@ -1,4 +1,5 @@
-// Dot-matrix variations of the activity spinner, tried from Knobs → Experiments → "Activity spinner". Each variation
+// Dot-matrix variations of the activity spinner, Soft Radar by default and others from Knobs → Experiments → "Activity
+// spinner". Each variation
 // is plain data: a dot layout, a keyframe shape, and a pattern that turns each dot's place (angle, distance, path
 // index…) into its animation delay. Animation is CSS only; every dot shares the variation's loop, so pinning start
 // times with syncSpinPhase keeps every spinner on screen in phase. Paste replacements from the prototype's
@@ -35,6 +36,8 @@ export type SpinnerVariant = {
   dim: number
   /** The keyframe shape: [percent of the loop, level from 0 (dim) to 1 (lit)]. */
   stops: readonly (readonly [number, number])[]
+  /** "linear" for densely sampled stops; otherwise each segment eases in and out. */
+  easing?: "linear"
 }
 
 export const spinnerVariants = {
@@ -140,6 +143,46 @@ export const spinnerVariants = {
       [100, 0],
     ],
   },
+  // Soft Radar's sweep without the steps: each dot rises over a fifth of a turn instead of popping, so while one
+  // dot brightens its neighbours on both rings are already rising and the head glides between them. The trail keeps
+  // Soft Radar's curve. Last, because Knobs saves a choice by its index.
+  radarSmooth: {
+    label: "Soft Radar (smooth)",
+    layout: "grid",
+    span: 5,
+    dot: 2,
+    gap: 1,
+    loop: 1.8,
+    pattern: "sweep",
+    steady: true,
+    dim: 0.2,
+    easing: "linear",
+    stops: [
+      [0, 0],
+      [2, 0.03],
+      [4, 0.117],
+      [6, 0.25],
+      [8, 0.413],
+      [10, 0.587],
+      [12, 0.75],
+      [14, 0.883],
+      [16, 0.97],
+      [18, 1],
+      [22, 0.987],
+      [26, 0.934],
+      [30, 0.812],
+      [34, 0.599],
+      [38, 0.384],
+      [42, 0.238],
+      [46, 0.143],
+      [50, 0.081],
+      [54, 0.041],
+      [58, 0.017],
+      [62, 0.004],
+      [66, 0],
+      [100, 0],
+    ],
+  },
 } satisfies Record<string, SpinnerVariant>
 
 export type SpinnerDot = {
@@ -228,7 +271,7 @@ export function spinnerKeyframes(name: string, variant: SpinnerVariant) {
   const frames = variant.stops
     .map(
       ([percent, level]) =>
-        `${round(percent)}%{opacity:${round(variant.dim + (1 - variant.dim) * level)};animation-timing-function:cubic-bezier(.45,0,.2,1)}`,
+        `${round(percent)}%{opacity:${round(variant.dim + (1 - variant.dim) * level)};animation-timing-function:${variant.easing ?? "cubic-bezier(.45,0,.2,1)"}}`,
     )
     .join("")
 

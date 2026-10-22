@@ -1,9 +1,7 @@
 import { expect, test } from "bun:test"
 
-test("progress indicator PNG loops 36 frames at 30 fps in a 16x16 canvas", async () => {
-  const png = Buffer.from(
-    await Bun.file(new URL("./session-progress-indicator-v2-1x.png", import.meta.url)).arrayBuffer(),
-  )
+test("Today spinner PNG loops 36 frames at 30 fps in a 16x16 canvas", async () => {
+  const png = Buffer.from(await Bun.file(new URL("./spinner.png", import.meta.url)).arrayBuffer())
 
   expect(png.subarray(0, 8)).toEqual(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
 
