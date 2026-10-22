@@ -1,10 +1,3 @@
-export const popularProviders = [
-  "opencode-go",
-  "opencode",
-  "anthropic",
-  "github-copilot",
-  "openai",
-  "google",
-  "openrouter",
-  "vercel",
-]
+// Fork: the providers featured first in the connect dialog, settings and model pickers.
+// All are OpenAI-compatible and ship in the models.dev catalog; the rest stay listed below them.
+export const popularProviders = ["deepseek", "openrouter", "moonshotai", "alibaba", "zai"]

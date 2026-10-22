@@ -62,7 +62,9 @@ const dropUnloadedOfficeFiles = {
 const bundleNestedWorkerDeps = {
   name: "opencode-desktop:bundle-nested-worker-deps",
   resolveId(id, importer) {
-    if (!importer || !workerDeps.includes(id) || !importer.includes("node_modules")) return
+    // Subpaths too: `@pierre/diffs` imports `@pierre/highlights/themes/loader`.
+    const dep = workerDeps.some((name) => id === name || id.startsWith(`${name}/`))
+    if (!importer || !dep || !importer.includes("node_modules")) return
 
     try {
       return createRequire(importer).resolve(id)
