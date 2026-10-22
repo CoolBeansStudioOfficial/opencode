@@ -584,6 +584,13 @@ export const SessionQuestionDock: Component<{ request: FormInfo; onSubmit: () =>
               </div>
             </div>
             <div data-slot="question-details">
+              <Show when={question()?.header}>
+                {(header) => (
+                  <span data-slot="question-header-chip">
+                    <bdi>{header()}</bdi>
+                  </span>
+                )}
+              </Show>
               <div
                 data-slot="question-text"
                 style={{

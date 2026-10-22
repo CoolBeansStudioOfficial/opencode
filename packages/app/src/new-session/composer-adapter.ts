@@ -5,6 +5,7 @@ import { startTransition } from "solid-js"
 import type { NewSessionComposerAdapter } from "@/composer/adapter"
 import { useComposerState } from "@/composer/persistence"
 import { createComposerControls, createComposerModelSelection } from "@/composer/selection"
+import { permissionModeKey, usePermissionModeDraft } from "@/composer/permission-mode"
 import { createComposerProjectControls } from "./project/controller"
 import { useLanguage } from "@/runtime/i18n/language"
 import { useLocal } from "@/providers/models/selection"
@@ -36,6 +37,7 @@ export function createNewSessionComposerAdapter(props: {
   const language = useLanguage()
   const model = createComposerModelSelection({ agent: () => local.agent.current() })
   const controls = createComposerControls({ model })
+  const permissionMode = usePermissionModeDraft()
 
   const adapter: NewSessionComposerAdapter = {
     kind: "new-session",
@@ -102,6 +104,7 @@ export function createNewSessionComposerAdapter(props: {
           variant: selection.variant,
         },
         location: { directory: sessionDirectory },
+        metadata: { [permissionModeKey]: permissionMode.mode() },
       })
 
       const creation = created.request.then(

@@ -71,6 +71,21 @@
     min-inline-size: 0;
   }
 
+  [data-slot="question-header-chip"] {
+    align-self: flex-start;
+    max-inline-size: 100%;
+    padding: 0 6px;
+    border-radius: 4px;
+    background: var(--v2-background-bg-deep);
+    font-size: 11px;
+    font-weight: 530;
+    line-height: var(--line-height-compact);
+    color: var(--v2-text-text-faint);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   [data-slot="question-text"] {
     font-size: 13px;
     font-weight: 530;

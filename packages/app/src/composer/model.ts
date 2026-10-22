@@ -26,6 +26,7 @@ import { createComposerHistory } from "./history/store"
 import { createComposerSubmit } from "./submit"
 import { useAttachmentDestination } from "./attachments/destination"
 import { parseClientSlashCommand } from "./client-slash-command"
+import { permissionModes, usePermissionMode, type PermissionMode } from "./permission-mode"
 
 export type ComposerModel = ComposerEditorModel & {
   readonly model: ComposerControls["model"]
@@ -53,6 +54,7 @@ export function createComposerModel(adapter: ComposerAdapter, options?: { queue?
   const command = useCommand()
   const language = useLanguage()
   const platform = usePlatform()
+  const permissionMode = usePermissionMode()
   const prompt = adapter.state
   let editor: HTMLDivElement | undefined
 
@@ -388,6 +390,12 @@ export function createComposerModel(adapter: ComposerAdapter, options?: { queue?
     },
     view: {
       placeholder,
+      permissionMode: {
+        title: () => language.t("composer.permissionMode.choose"),
+        options: () => permissionModes.map((mode) => ({ id: mode, label: permissionMode.label(mode) })),
+        current: permissionMode.current,
+        onSelect: (value: string) => permissionMode.set(value as PermissionMode),
+      },
       get agent() {
         const agents = adapter.controls().agents
 

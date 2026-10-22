@@ -36,6 +36,7 @@ export type ComposerEditorView = {
   add?: {
     onAttach: () => void
   }
+  permissionMode?: ComposerSelectControl & { title: Accessor<string> }
   agent?: ComposerSelectControl
   variant?: ComposerSelectControl
   submit: {
@@ -264,6 +265,16 @@ export function createComposerEditor(input: {
     }
 
     if (handled) return true
+
+    // Shift+Tab cycles the permission mode only inside the composer, so it keeps moving focus backwards elsewhere.
+    const permissionMode = input.view.permissionMode
+    if (event.key === "Tab" && event.shiftKey && state.mode === "normal" && permissionMode) {
+      event.preventDefault()
+      const ids = permissionMode.options().map((option) => option.id)
+      permissionMode.onSelect(ids[(ids.indexOf(permissionMode.current()) + 1) % ids.length])
+
+      return true
+    }
 
     if (event.key === "Escape" && input.view.submit.queue?.editing()) {
       event.preventDefault()

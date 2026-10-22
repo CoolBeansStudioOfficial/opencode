@@ -744,6 +744,10 @@ export function createData(config: CreateDataInput) {
         if (store.session.info[event.data.sessionID])
           setStore("session", "info", event.data.sessionID, "permissions", event.data.permissions)
         return
+      case "session.metadata.updated":
+        if (store.session.info[event.data.sessionID])
+          setStore("session", "info", event.data.sessionID, "metadata", reconcile(event.data.metadata))
+        return
       case "session.archived":
         if (store.session.info[event.data.sessionID])
           setStore("session", "info", event.data.sessionID, "time", "archived", event.created)
@@ -1520,6 +1524,7 @@ export function createData(config: CreateDataInput) {
         agent?: string
         model?: ModelRef
         location?: LocationRef
+        metadata?: Record<string, string>
         projectID?: string
       }) {
         const { projectID, ...payload } = input

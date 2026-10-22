@@ -16,12 +16,17 @@ export const description = `Use this tool when you need to ask the user question
 4. Offer choices to the user about what direction to take.
 
 Usage notes:
+- Ask 1-4 questions per call. Give each a short \`header\` (at most 12 characters) shown as a chip, such as "Auth method" or "Library"
+- Give each question 2-4 distinct, mutually exclusive options (unless \`multiple\` is set), each with a 1-5 word label and a description of what choosing it means
 - A "Type your own answer" option is added automatically; don't include a separate option for free form answers
 - Set \`multiple: true\` to allow selecting more than one option
-- If you recommend a specific option, make that the first option in the list and add "(Recommended)" at the end of the label`
+- If you recommend a specific option, make that the first option in the list and add "(Recommended)" at the end of the label
+- Only ask when you are blocked on a decision that is genuinely the user's to make. Don't ask for facts you can find in the code, or "Is my plan ready?" / "Should I proceed?"`
 
 export const Input = Schema.Struct({
-  questions: Schema.Array(Question.Prompt).check(Schema.isNonEmpty()).annotate({ description: "Questions to ask" }),
+  questions: Schema.Array(Question.Prompt)
+    .check(Schema.isNonEmpty(), Schema.isMaxLength(4))
+    .annotate({ description: "Questions to ask (1-4)" }),
 })
 
 export const Output = Schema.Struct({

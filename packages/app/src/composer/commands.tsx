@@ -6,6 +6,7 @@ import { useDialog } from "@opencode/ui/context/dialog"
 import { useSessionLayout } from "@/session/session-layout"
 import { createSessionOwnership } from "@/session/session-ownership"
 import { useWorkspaceLocation } from "@/workspaces/location"
+import { usePermissionMode } from "./permission-mode"
 
 const withCategory = (category: string) => {
   return (option: Omit<CommandOption, "category">): CommandOption => ({
@@ -23,6 +24,7 @@ export const useComposerCommands = (input: { model?: ModelSelection } = {}) => {
   const { sessionKey } = useSessionLayout()
   const sessionOwnership = createSessionOwnership(sessionKey)
   const model = input.model ?? local.model
+  const permissionMode = usePermissionMode()
   const modelCommand = withCategory(language.t("command.category.model"))
   const agentCommand = withCategory(language.t("command.category.agent"))
   const providerCommand = withCategory(language.t("command.category.provider"))
@@ -70,6 +72,12 @@ export const useComposerCommands = (input: { model?: ModelSelection } = {}) => {
       slash: "agent",
       disabled: !local.agent.visible(),
       onSelect: () => local.agent.move(1),
+    }),
+    agentCommand({
+      id: "permissionMode.cycle",
+      title: language.t("command.permissionMode.cycle"),
+      description: language.t("command.permissionMode.cycle.description"),
+      onSelect: permissionMode.cycle,
     }),
     agentCommand({
       id: "agent.cycle.reverse",
