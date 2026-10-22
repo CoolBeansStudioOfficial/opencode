@@ -4,6 +4,7 @@ import { createEffect, on } from "solid-js"
 import { useExtensionHost } from "@/runtime/extension/host"
 import { useExtensionAttachment } from "@/runtime/extension/host-apis"
 import { useData } from "@/runtime/server/current"
+import { clearPendingArtifact, pendingArtifact } from "@/artifacts/pending"
 
 const isArtifactMetadata = Schema.is(Schema.Struct({ path: Schema.String }))
 
@@ -47,6 +48,19 @@ export function SessionArtifactOpener(props: { sessionID: () => string | undefin
       },
     ),
   )
+
+  // An artifact chosen on the Artifacts page (or a transcript card) opens once its session is on screen.
+  createEffect(() => {
+    const request = pendingArtifact()
+    const session = extensions.current()
+    // The session screen attaches after this mounts; wait for it so the panel has somewhere to open.
+    if (!request || request.sessionID !== props.sessionID() || !session) return
+    clearPendingArtifact()
+    const open = () => links.open({ href: request.path, exact: true, session })
+    open()
+    // The file screen attaches a moment after the session does and ignores opens until then; opening a tab twice is a no-op.
+    ;[400, 1200].forEach((delay) => setTimeout(open, delay))
+  })
 
   return null
 }

@@ -369,6 +369,7 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement }; hideTa
                 }
 
                 case "settings":
+                case "artifacts":
                 case "connect":
                 case "home": {
                   const selection = layout.home.selection()
