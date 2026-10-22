@@ -34,6 +34,7 @@ import {
 } from "./artifact"
 import { current, useShared } from "./context"
 import { FileViewer } from "./contract"
+import { ArtifactActions } from "./artifact-actions"
 import { DesignCanvas } from "./design-canvas"
 import { isDesign, parseDesign, type Design } from "./design"
 import { workspaceFileUrl } from "./path"
@@ -195,12 +196,15 @@ export default function ArtifactView(props: {
         onModeChange={previewable() ? (mode) => change({ mode }) : undefined}
         meta={meta()}
         actions={
-          <Show when={kind() === "html"}>
-            <Button size="small" variant={designView() ? "neutral" : "ghost"} onClick={() => setDesignView(!designView())}>
-              {ctx.t("design.view")}
-            </Button>
-            <OpenInBrowserButton session={props.session} path={props.path} />
-          </Show>
+          <>
+            <ArtifactActions session={props.session} path={props.path} content={props.content} />
+            <Show when={kind() === "html"}>
+              <Button size="small" variant={designView() ? "neutral" : "ghost"} onClick={() => setDesignView(!designView())}>
+                {ctx.t("design.view")}
+              </Button>
+              <OpenInBrowserButton session={props.session} path={props.path} />
+            </Show>
+          </>
         }
       />
       <Show when={!previewable() || state().mode === "preview"} fallback={props.source}>
@@ -281,7 +285,7 @@ function ArtifactToolbar(props: {
   const ctx = useExtension()
 
   return (
-    <div data-slot="artifact-toolbar" class="flex h-10 shrink-0 items-center gap-3 px-4">
+    <div data-slot="artifact-toolbar" class="flex min-h-10 shrink-0 flex-wrap items-center gap-x-3 gap-y-1 px-4 py-1">
       <Show when={props.onModeChange}>
         <SegmentedControl
           value={props.mode ?? "preview"}
@@ -293,7 +297,7 @@ function ArtifactToolbar(props: {
           <SegmentedControlItem value="source">{ctx.t("view.source")}</SegmentedControlItem>
         </SegmentedControl>
       </Show>
-      <div class="ms-auto flex min-w-0 items-center gap-3">
+      <div class="ms-auto flex min-w-0 flex-wrap items-center justify-end gap-x-3 gap-y-1">
         <div class="flex min-w-0 items-center gap-2 text-12-regular text-text-weak">
           <For each={props.meta}>
             {(item, index) => (

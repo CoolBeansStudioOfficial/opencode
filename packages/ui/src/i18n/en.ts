@@ -190,6 +190,7 @@ const source = {
   "ui.tool.loadedSkills.one": "Loaded {{name}} skill",
   "ui.tool.loadedSkills.other": "Loaded {{name}} skills",
   "ui.tool.list": "List",
+  "ui.tool.artifact.open": "Open",
   "ui.tool.glob": "Glob",
   "ui.tool.grep": "Grep",
   "ui.tool.task": "Task",

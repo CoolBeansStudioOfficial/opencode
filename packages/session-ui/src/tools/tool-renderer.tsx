@@ -1602,6 +1602,37 @@ ToolRegistry.register({
   },
 })
 
+// Fork: a finished `artifact` call shows as a card; clicking it opens the artifact in the side panel viewer.
+ToolRegistry.register({
+  name: "artifact",
+  render(props) {
+    const markdown = useMarkdown()
+    const i18n = useI18n()
+    const path = () => (typeof props.metadata.path === "string" ? props.metadata.path : "")
+    const title = () => (typeof props.metadata.title === "string" ? props.metadata.title : getFilename(path()))
+
+    return (
+      <Show when={props.status === "completed" && path()} fallback={<GenericTool {...props} />}>
+        <button
+          type="button"
+          data-component="artifact-tool-card"
+          class="flex w-full max-w-md items-center gap-3 rounded-[12px] border border-v2-border-border-base bg-v2-background-bg-layer-02 p-3 text-start hover:bg-v2-overlay-simple-overlay-hover"
+          onClick={() => void markdown?.openLocalFile?.(path())}
+        >
+          <span class="flex size-9 shrink-0 items-center justify-center rounded-[8px] bg-v2-background-bg-deep">
+            <FileIcon node={{ path: path(), type: "file" }} class="size-5" />
+          </span>
+          <span class="flex min-w-0 flex-1 flex-col">
+            <span class="truncate text-[14px] text-v2-text-text-strong [font-weight:560]">{title()}</span>
+            <span class="truncate text-[12px] text-v2-text-text-muted">{getFilename(path())}</span>
+          </span>
+          <span class="shrink-0 text-[12px] text-v2-text-text-muted">{i18n.t("ui.tool.artifact.open")}</span>
+        </button>
+      </Show>
+    )
+  },
+})
+
 ToolRegistry.register({
   name: "glob",
   render(props) {
