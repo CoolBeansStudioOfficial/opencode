@@ -6,11 +6,11 @@ import solid from "vite-plugin-solid"
 import tailwind from "@tailwindcss/vite"
 import type {} from "../../app/src/session/composer/activity-chips.fixture"
 
-// Production components and Storybook's service mocks, bundled without the live Storybook module loader.
+// Production components and the story server's service mocks, bundled without a dev server.
 const out = path.resolve("captures/chip-orb-flag")
 const verify = process.argv.includes("--verify-only")
-const root = path.resolve("packages/storybook/node_modules/.cache/chip-orb-proof")
-const mocks = path.resolve("packages/storybook/.storybook/mocks")
+const root = path.resolve("packages/stories/node_modules/.cache/chip-orb-proof")
+const mocks = path.resolve("packages/stories/mocks")
 await mkdir(out, { recursive: true })
 await mkdir(root, { recursive: true })
 await Bun.write(

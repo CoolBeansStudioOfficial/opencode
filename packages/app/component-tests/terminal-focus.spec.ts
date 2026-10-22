@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test"
-import { expect, sourceURL, story } from "../../storybook/playwright/story"
+import { expect, sourceURL, story } from "../../stories/playwright/story"
 
 const fixture = sourceURL(new URL("../../gui-extensions/src/terminal/terminal.fixture.tsx", import.meta.url))
 
