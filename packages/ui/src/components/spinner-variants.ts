@@ -34,10 +34,20 @@ export type SpinnerVariant = {
   steady?: boolean
   /** Resting opacity of an unlit dot. */
   dim: number
-  /** The keyframe shape: [percent of the loop, level from 0 (dim) to 1 (lit)]. */
+  /** The keyframe shape: [percent of the loop, level from 0 (dim) to 1 (lit)]. With a head, the trail it leaves. */
   stops: readonly (readonly [number, number])[]
-  /** "linear" for densely sampled stops; otherwise each segment eases in and out. */
-  easing?: "linear"
+  /**
+   * Sweeps on a grid: the head is the brightest dot and `stops` only fade behind it. "step" lights the dot nearest the
+   * head on each square ring; "glide" shares the head between the two dots either side of it, so it moves continuously.
+   */
+  head?: "step" | "glide"
+}
+
+// Soft Radar's trail: its ease-in-out fade over 48% of the loop, sampled every 4%, from a level below the head's.
+const fade = [1, 0.987, 0.934, 0.812, 0.599, 0.384, 0.238, 0.143, 0.081, 0.041, 0.017, 0.004, 0]
+
+function trail(from: number) {
+  return [...fade.map((level, index) => [index * 4, round(from * level)] as const), [100, 0] as const]
 }
 
 export const spinnerVariants = {
@@ -51,12 +61,8 @@ export const spinnerVariants = {
     pattern: "sweep",
     steady: true,
     dim: 0.2,
-    stops: [
-      [0, 0],
-      [3, 1],
-      [51, 0],
-      [100, 0],
-    ],
+    head: "step",
+    stops: trail(0.55),
   },
   orbRadar: {
     label: "Orb Radar",
@@ -143,9 +149,8 @@ export const spinnerVariants = {
       [100, 0],
     ],
   },
-  // Soft Radar's sweep without the steps: each dot rises over a fifth of a turn instead of popping, so while one
-  // dot brightens its neighbours on both rings are already rising and the head glides between them. The trail keeps
-  // Soft Radar's curve. Last, because Knobs saves a choice by its index.
+  // Soft Radar's sweep without the steps: the head lights the two dots either side of it on each ring in proportion
+  // to how close it is, so it glides between them. Last, because Knobs saves a choice by its index.
   radarSmooth: {
     label: "Soft Radar (smooth)",
     layout: "grid",
@@ -156,32 +161,8 @@ export const spinnerVariants = {
     pattern: "sweep",
     steady: true,
     dim: 0.2,
-    easing: "linear",
-    stops: [
-      [0, 0],
-      [2, 0.03],
-      [4, 0.117],
-      [6, 0.25],
-      [8, 0.413],
-      [10, 0.587],
-      [12, 0.75],
-      [14, 0.883],
-      [16, 0.97],
-      [18, 1],
-      [22, 0.987],
-      [26, 0.934],
-      [30, 0.812],
-      [34, 0.599],
-      [38, 0.384],
-      [42, 0.238],
-      [46, 0.143],
-      [50, 0.081],
-      [54, 0.041],
-      [58, 0.017],
-      [62, 0.004],
-      [66, 0],
-      [100, 0],
-    ],
+    head: "glide",
+    stops: trail(0.35),
   },
 } satisfies Record<string, SpinnerVariant>
 
@@ -197,12 +178,34 @@ export type SpinnerDot = {
   hold?: "lit" | "rest"
   /** Opacity for reduced motion: the pattern frozen a fifth of the way into its loop. */
   still: number
+  /** Which of the variation's keyframes the dot runs: spinnerKeyframes names them `name-0`, `name-1`… */
+  shape: number
 }
 
 type Cell = { c: number; r: number; gx: number; gy: number }
 
 /** The dots of a variation, positioned in a 16-unit viewBox. */
-export function spinnerDots(variant: SpinnerVariant): SpinnerDot[] {
+export function spinnerDots(variant: SpinnerVariant) {
+  return layout(variant).dots
+}
+
+/** The variation's keyframes, one per shape its dots run, named `name-0`, `name-1`… */
+export function spinnerKeyframes(name: string, variant: SpinnerVariant) {
+  return layout(variant)
+    .shapes.map((stops, index) => {
+      const frames = stops
+        .map(
+          ([percent, level]) =>
+            `${round(percent)}%{opacity:${round(variant.dim + (1 - variant.dim) * level)};animation-timing-function:${variant.head ? "linear" : "cubic-bezier(.45,0,.2,1)"}}`,
+        )
+        .join("")
+
+      return `@keyframes ${name}-${index}{${frames}}`
+    })
+    .join("")
+}
+
+function layout(variant: SpinnerVariant) {
   const cells = variant.layout === "orb" ? orb() : grid(variant.span)
   const extent = variant.span * variant.dot + (variant.span - 1) * variant.gap
   const fit = Math.min(1, 15 / extent)
@@ -213,7 +216,7 @@ export function spinnerDots(variant: SpinnerVariant): SpinnerDot[] {
   const random = seeded(4242)
   const offsets = Array.from({ length: variant.span }, () => random())
 
-  return cells.map((cell, index) => {
+  const placed = cells.map((cell) => {
     const centre = cell.gx === 0 && cell.gy === 0
 
     const twinkle =
@@ -247,35 +250,88 @@ export function spinnerDots(variant: SpinnerVariant): SpinnerDot[] {
 
     const hold =
       variant.steady && centre
-        ? "lit"
+        ? ("lit" as const)
         : variant.pattern === "border" && !ring.includes(cell.r * variant.span + cell.c)
-          ? "rest"
+          ? ("rest" as const)
           : undefined
 
-    const level = hold === "lit" ? 1 : hold === "rest" ? 0 : levelAt(variant.stops, frac(0.22 - at) * 100)
+    return { cell, at, hold, scale: twinkle?.scale ?? 1 }
+  })
+
+  // With a head, each dot's shape depends on how far it sits from its neighbours on its square ring, in loop fractions.
+  const keys = placed.map((dot) => {
+    if (!variant.head || dot.hold) return ""
+    const ringOf = (cell: Cell) => Math.max(Math.abs(cell.gx), Math.abs(cell.gy))
+    const others = placed.filter((other) => other !== dot && !other.hold && ringOf(other.cell) === ringOf(dot.cell))
+    const behind = Math.min(...others.map((other) => frac(dot.at - other.at)))
+    const ahead = Math.min(...others.map((other) => frac(other.at - dot.at)))
+    return `${round(behind)} ${round(ahead)}`
+  })
+  const unique = [...new Set(keys.filter((key) => key !== ""))]
+  const shapes = variant.head
+    ? unique.map((key) => {
+        const [behind, ahead] = key.split(" ").map(Number)
+        return headStops(variant, behind! * 100, ahead! * 100)
+      })
+    : [variant.stops]
+
+  const dots = placed.map((dot, index): SpinnerDot => {
+    const shape = Math.max(0, unique.indexOf(keys[index]!))
+    // A steady centre glows like the fresh trail, so the head stays the brightest dot.
+    const lit = variant.head ? variant.stops[0]![1] : 1
+    const level =
+      dot.hold === "lit" ? lit : dot.hold === "rest" ? 0 : levelAt(shapes[shape]!, frac(0.22 - dot.at) * 100)
 
     return {
-      x: round(8 + cell.gx * pitch - size / 2),
-      y: round(8 + cell.gy * pitch - size / 2),
+      x: round(8 + dot.cell.gx * pitch - size / 2),
+      y: round(8 + dot.cell.gy * pitch - size / 2),
       size: round(size),
-      at: round(at),
-      scale: twinkle?.scale ?? 1,
-      hold,
+      at: round(dot.at),
+      scale: dot.scale,
+      hold: dot.hold,
       still: round(variant.dim + (1 - variant.dim) * level),
+      shape,
     }
   })
+
+  return { dots, shapes }
 }
 
-/** The variation's keyframes, named `name`. */
-export function spinnerKeyframes(name: string, variant: SpinnerVariant) {
-  const frames = variant.stops
-    .map(
-      ([percent, level]) =>
-        `${round(percent)}%{opacity:${round(variant.dim + (1 - variant.dim) * level)};animation-timing-function:${variant.easing ?? "cubic-bezier(.45,0,.2,1)"}}`,
-    )
-    .join("")
+// One dot's level through the loop, 0% being the moment the head passes it, with `behind` and `ahead` the percent of
+// the loop to its neighbours on its ring. "step" lights it while it's the dot nearest the head; "glide" rises linearly
+// from the neighbour behind and falls linearly toward the one ahead. Then the trail takes over, never above the head.
+function headStops(variant: SpinnerVariant, behind: number, ahead: number): (readonly [number, number])[] {
+  const edge = 1.5
+  const trailAt = (percent: number) => levelAt(variant.stops, percent)
+  const tail = (from: number) =>
+    variant.stops
+      .filter(([percent]) => percent > from && percent < 100)
+      .map(([percent, level]) => [percent, level] as const)
 
-  return `@keyframes ${name}{${frames}}`
+  if (variant.head === "step") {
+    const off = ahead / 2 + edge
+    const on = 100 - behind / 2
+    return [
+      [0, 1],
+      [ahead / 2, 1],
+      [off, trailAt(off)],
+      ...tail(off).filter(([percent]) => percent < on - edge),
+      [on - edge, 0],
+      [on, 1],
+      [100, 1],
+    ]
+  }
+
+  // Where the falling edge meets the trail.
+  const meet = Array.from({ length: 40 }).reduce<[number, number]>(
+    ([lo, hi]) => {
+      const mid = (lo + hi) / 2
+      return 1 - mid / ahead > trailAt(mid) ? [mid, hi] : [lo, mid]
+    },
+    [0, ahead],
+  )[0]
+  const on = 100 - behind
+  return [[0, 1], [meet, trailAt(meet)], ...tail(meet).filter(([percent]) => percent < on), [on, 0], [100, 1]]
 }
 
 function grid(span: number): Cell[] {

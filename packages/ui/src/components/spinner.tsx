@@ -83,10 +83,10 @@ export function Spinner(props: ComponentProps<"svg"> & { "data-component"?: stri
                     height={dot.size}
                     rx={dot.size * 0.24}
                     style={{
-                      "--still": dot.hold === "lit" ? 1 : dot.hold === "rest" ? current.dim : dot.still,
+                      "--still": dot.still,
                       animation: dot.hold
                         ? undefined
-                        : `${keyframes} calc(${loop}s * var(--spinner-time, 1)) linear calc(${-loop * (1 - dot.at)}s * var(--spinner-time, 1)) infinite`,
+                        : `${keyframes}-${dot.shape} calc(${loop}s * var(--spinner-time, 1)) linear calc(${-loop * (1 - dot.at)}s * var(--spinner-time, 1)) infinite`,
                     }}
                   />
                 )
