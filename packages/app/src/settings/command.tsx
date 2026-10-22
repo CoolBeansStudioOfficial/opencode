@@ -1,3 +1,4 @@
+import { useArtifactsCommand } from "@/artifacts/command"
 import { useCommand } from "@/shell/commands/command"
 import { useLanguage } from "@/runtime/i18n/language"
 import { useSettingsSurface } from "./surface"
@@ -13,6 +14,8 @@ export function useSettingsCommand() {
   const command = useCommand()
   const language = useLanguage()
   const show = useSettingsDialog()
+  // Registered here because every screen that has settings also needs the Artifacts command.
+  useArtifactsCommand()
 
   command.register("settings", () => [
     {
