@@ -47,7 +47,8 @@ export const Plugin = {
     const permission = yield* Permission.Service
     // Internal plugins are not re-run on config changes, so reload the tool transform instead.
     const loaded = yield* ConfigEntryObserver.observe(config, ctx.event, ctx.tool.reload())
-    const enabled = () => Config.latest(loaded.entries, "experimental")?.todo === true
+    // Fork: on by default so the pinned task list has data; `experimental.todo: false` turns it off.
+    const enabled = () => Config.latest(loaded.entries, "experimental")?.todo !== false
 
     yield* ctx.tool
       .transform((editor) => {

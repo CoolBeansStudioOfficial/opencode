@@ -548,6 +548,8 @@ export const dict = {
   "session.queue.count.one": "{{count}} queued",
   "session.queue.count.other": "{{count}} queued",
   "session.queue.steer": "Steer",
+  "session.tasks.title": "Tasks",
+  "session.tasks.progress": "{{done}} of {{total}} done",
   "session.queue.send": "Send",
   "session.queue.steerTooltip": "Send without interrupting",
   "session.queue.remove": "Remove",
