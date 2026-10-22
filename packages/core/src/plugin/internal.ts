@@ -97,6 +97,7 @@ import { PlanPlugin } from "./plan.js"
 import { PermissionModePlugin } from "./permission-mode.js"
 import { WebPushPlugin } from "./web-push.js"
 import { GitActionsPlugin } from "./git-actions.js"
+import { CustomProviderPlugin } from "./custom-provider.js"
 import { MemoryPlugin } from "./memory.js"
 import { SchedulerPlugin } from "./scheduler.js"
 import { CompactFocusPlugin } from "./compact-focus.js"
@@ -237,6 +238,7 @@ const pre = [
   PermissionModePlugin.Plugin,
   WebPushPlugin.Plugin,
   GitActionsPlugin.Plugin,
+  CustomProviderPlugin.Plugin,
   MemoryPlugin.Plugin,
   SchedulerPlugin.Plugin,
   CompactFocusPlugin.Plugin,

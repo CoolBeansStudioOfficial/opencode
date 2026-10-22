@@ -8,7 +8,8 @@ import { showToast } from "@/shell/notifications/toast"
 import { batch, For } from "solid-js"
 import { createStore, produce } from "solid-js/store"
 import { ExternalLink } from "@/runtime/platform/external-link"
-import { useData } from "@/runtime/server/current"
+import { useData, useServer } from "@/runtime/server/current"
+import { CustomProvider } from "@opencode/schema/custom-provider"
 import { useLanguage } from "@/runtime/i18n/language"
 import { type FormState, headerRow, modelRow, validateCustomProvider } from "./form"
 import { CustomManagedProviderIcon } from "@/providers/models/provider-group"
@@ -16,6 +17,7 @@ import { CustomManagedProviderIcon } from "@/providers/models/provider-group"
 export function CustomProviderForm(props: { autofocus?: boolean } = {}) {
   const dialog = useDialog()
   const data = useData()
+  const server = useServer()
   const language = useLanguage()
 
   const [form, setForm] = createStore<FormState>({
@@ -107,8 +109,15 @@ export function CustomProviderForm(props: { autofocus?: boolean } = {}) {
 
   const saveMutation = useMutation(() => ({
     mutationFn: async (result: NonNullable<ReturnType<typeof validate>>): Promise<typeof result> => {
-      // TODO: Restore custom providers when V2 exposes config and arbitrary credential APIs.
-      throw new Error(language.t("provider.custom.unavailable"))
+      await server.ctx.sdk.api.rpc(CustomProvider.Definition).add({
+        providerID: result.providerID,
+        name: result.name,
+        baseURL: result.config.options.baseURL,
+        ...(result.key ? { apiKey: result.key } : result.config.env ? { apiKey: `{env:${result.config.env[0]}}` } : {}),
+        headers: ("headers" in result.config.options ? result.config.options.headers : undefined) ?? {},
+        models: Object.entries(result.config.models).map(([id, model]) => ({ id, name: model.name })),
+      })
+      return result
     },
     onSuccess: (result) => {
       dialog.close()
