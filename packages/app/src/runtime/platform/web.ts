@@ -26,9 +26,23 @@ export function createWebPlatform(version: string) {
 
       if (document.visibilityState === "visible" && document.hasFocus()) return
 
+      // Fork: with web push on, the server already notifies this device; skip the duplicate. Android only shows
+      // notifications through the service worker, so prefer it when one is active.
+      const registration = await navigator.serviceWorker?.getRegistration().catch(() => undefined)
+
+      if (await registration?.pushManager?.getSubscription().catch(() => null)) return
+
+      if (registration) {
+        await registration
+          .showNotification(title, { body: description ?? "", icon: "/favicon-96x96-v3.png" })
+          .catch(() => undefined)
+
+        return
+      }
+
       const notification = new Notification(title, {
         body: description ?? "",
-        icon: "https://opencode.ai/favicon-96x96-v3.png",
+        icon: "/favicon-96x96-v3.png",
       })
 
       notification.onclick = () => {

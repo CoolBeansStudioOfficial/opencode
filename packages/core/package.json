@@ -91,6 +91,7 @@
     "@tsconfig/bun": "catalog:",
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
+    "@types/web-push": "3.6.4",
     "@types/which": "3.0.4",
     "drizzle-kit": "catalog:",
     "fast-check": "catalog:"
@@ -132,6 +133,7 @@
     "mime-types": "3.0.2",
     "tree-sitter-bash": "0.25.0",
     "tree-sitter-powershell": "0.25.10",
+    "web-push": "3.6.7",
     "web-tree-sitter": "0.25.10",
     "which": "6.0.1",
     "zod": "catalog:"

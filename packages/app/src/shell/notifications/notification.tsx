@@ -264,7 +264,42 @@ export function createServerNotificationState(input: {
     })
   }
 
+  // Fork: permission requests and agent questions block the session until answered, so they notify too.
+  const handleNeedsAnswer = (sessionID: string, eventID: string, description: string) => {
+    void lookup(input.data.session.root(sessionID)).then((session) => {
+      if (disposed.value) return
+
+      const root = session?.id ?? sessionID
+
+      if (!sessionIDHasOpenTab(tabs.store, input.key, root)) return
+
+      if (settings.sounds.permissionsEnabled()) {
+        void input.coordinator.sound(`${input.key}\0${eventID}`, () => playSoundById(settings.sounds.permissions()))
+      }
+
+      if (settings.notifications.permissions()) {
+        void input.coordinator.system(`${input.key}\0${eventID}`, () =>
+          platform.notify(language.t("notification.permission.title"), session?.title ?? description, () =>
+            openNotificationSession(tabs, input.key, root),
+          ),
+        )
+      }
+    })
+  }
+
   const unsub = input.sdk.event.listen((event) => {
+    if (event.type === "permission.asked") {
+      handleNeedsAnswer(event.data.sessionID, event.id, event.data.action)
+
+      return
+    }
+
+    if (event.type === "form.created" && event.data.form.metadata?.kind === "question") {
+      handleNeedsAnswer(event.data.form.sessionID, event.id, event.data.form.title)
+
+      return
+    }
+
     if (event.type === "session.execution.failed") {
       handleSessionError(event.data.sessionID, event.id)
 

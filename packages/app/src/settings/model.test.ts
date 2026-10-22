@@ -103,7 +103,7 @@ describe("settings schema", () => {
         mono: "",
         sans: "",
         terminal: "",
-        tabLayout: "horizontal",
+        tabLayout: "hidden",
       },
       keybinds: {},
       permissions: { autoApprove: false, autoApproveProjects: {} },

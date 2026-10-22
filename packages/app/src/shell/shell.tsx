@@ -1,4 +1,4 @@
-import { Show, Suspense, type ParentProps } from "solid-js"
+import { onCleanup, onMount, Show, Suspense, type ParentProps } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createMediaQuery } from "@solid-primitives/media"
 import { ResizeHandle } from "@opencode/ui/resize-handle"
@@ -24,6 +24,26 @@ export default function Layout(props: ParentProps) {
   const sidebar = createSessionsSidebar()
   const command = useCommand()
   const language = useLanguage()
+
+  // Fork: a tapped push notification opens its session (see public/push-sw.js).
+  onMount(() => {
+    const params = new URLSearchParams(location.search)
+    const fromLink = params.get("session")
+
+    if (fromLink) {
+      params.delete("session")
+      history.replaceState(history.state, "", `${location.pathname}${params.size ? `?${params}` : ""}`)
+      void sidebar.openByID(fromLink)
+    }
+
+    const onMessage = (event: MessageEvent) => {
+      if (event.data?.type === "opencode.push.open" && typeof event.data.sessionID === "string")
+        void sidebar.openByID(event.data.sessionID)
+    }
+
+    navigator.serviceWorker?.addEventListener("message", onMessage)
+    onCleanup(() => navigator.serviceWorker?.removeEventListener("message", onMessage))
+  })
 
   command.register("sessions-sidebar", () => [
     {

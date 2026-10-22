@@ -13,6 +13,8 @@ import { SettingsList } from "@/settings/list"
 import { ShellSetting } from "@/settings/general/general"
 import { createServerShellController } from "@/settings/general/controllers"
 import type { SettingsServer } from "./inventory"
+import { ServerPushSetting } from "./push"
+import { usePlatform } from "@/runtime/platform/platform"
 import "@/settings/settings.css"
 
 export const SettingsServerGeneral: Component<{
@@ -104,12 +106,16 @@ export const SettingsServerGeneral: Component<{
 function ServerShell(props: { server: ServerConnection.Any }) {
   const language = useLanguage()
   const controller = createServerShellController(() => props.server)
+  const platform = usePlatform()
 
   return (
     <section class="settings-section">
       <h3 class="settings-section-title">{language.t("settings.tab.preferences")}</h3>
       <SettingsList>
         <ShellSetting controller={controller} />
+        <Show when={platform.platform === "web"}>
+          <ServerPushSetting server={props.server} />
+        </Show>
       </SettingsList>
     </section>
   )

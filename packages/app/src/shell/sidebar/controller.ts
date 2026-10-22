@@ -172,6 +172,18 @@ export function createSessionsSidebar() {
         ),
       }),
     deleteGroup: (groupID: string) => setState({ groups: state.groups.filter((group) => group.id !== groupID) }),
+    // Opens a session by ID, for notification taps that may name a session outside the loaded list.
+    openByID: async (sessionID: string) => {
+      const ctx = home.server.focusedContext()
+      const conn = home.server.focused()
+
+      if (!ctx || !conn) return
+      const session = ctx.data.session.get(sessionID) ?? (await ctx.sdk.api.session.get({ sessionID }).catch(() => undefined))
+
+      if (!session) return
+      ctx.data.session.remember(session)
+      void startTransition(() => tabs.select(tabs.addSessionTab({ server: ServerConnection.key(conn), sessionId: sessionID })))
+    },
     newSession: home.project.openNewSession,
     canCreate: () => !!home.project.newSession(),
     open: (record: HomeSessionRecord) => {
