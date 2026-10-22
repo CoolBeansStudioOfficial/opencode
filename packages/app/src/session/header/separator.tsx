@@ -7,14 +7,14 @@ const group = "Experiments"
 const glyph = motionTuning.choice("sessionHeader.separator", {
   label: "Header separator",
   group,
-  value: "divider",
+  value: "chevron",
   labels: { divider: "Divider", slash: "Slash", chevron: "Chevron", bold: "Bold chevron", dot: "Dot" },
 })
 
 const size = motionTuning.number("sessionHeader.separator.size", {
   label: "Separator size",
   group,
-  value: 14,
+  value: 11,
   min: 6,
   max: 24,
   step: 1,
@@ -93,18 +93,7 @@ export function SessionHeaderSeparator(props: { before?: number; after?: number 
           <span class="block rounded-full bg-current" style={{ width: `${width()}px`, height: `${width()}px` }} />
         </Match>
         <Match when={tuning.glyph === "slash"}>
-          <svg
-            class="block fill-none stroke-current"
-            width={tuning.size * 0.4}
-            height={tuning.size}
-            viewBox={`0 0 ${tuning.size * 0.4} ${tuning.size}`}
-            stroke-width={tuning.weight}
-            stroke-linecap="round"
-          >
-            <path
-              d={`M${tuning.weight / 2} ${tuning.size - tuning.weight / 2}L${tuning.size * 0.4 - tuning.weight / 2} ${tuning.weight / 2}`}
-            />
-          </svg>
+          <span class="session-header-slash" />
         </Match>
         <Match when={true}>
           <svg
