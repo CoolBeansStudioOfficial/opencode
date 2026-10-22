@@ -14,6 +14,7 @@ import { ShellSetting } from "@/settings/general/general"
 import { createServerShellController } from "@/settings/general/controllers"
 import type { SettingsServer } from "./inventory"
 import { ServerPushSetting } from "./push"
+import { ServerScheduleSetting } from "./schedule"
 import { usePlatform } from "@/runtime/platform/platform"
 import "@/settings/settings.css"
 
@@ -97,6 +98,9 @@ export const SettingsServerGeneral: Component<{
 
         <Show when={props.entry.connection} keyed>
           {(server) => <ServerShell server={server} />}
+        </Show>
+        <Show when={props.entry.connection} keyed>
+          {(server) => <ServerScheduleSetting server={server} />}
         </Show>
       </div>
     </>
