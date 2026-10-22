@@ -99,6 +99,7 @@ import { WebPushPlugin } from "./web-push.js"
 import { GitActionsPlugin } from "./git-actions.js"
 import { MemoryPlugin } from "./memory.js"
 import { SchedulerPlugin } from "./scheduler.js"
+import { CompactFocusPlugin } from "./compact-focus.js"
 import { ModelsDevPlugin } from "./models-dev.js"
 import { McpCodeModeDefaultsPlugin } from "./mcp-codemode-defaults.js"
 import { ProviderPlugins } from "./provider.js"
@@ -237,6 +238,7 @@ const pre = [
   GitActionsPlugin.Plugin,
   MemoryPlugin.Plugin,
   SchedulerPlugin.Plugin,
+  CompactFocusPlugin.Plugin,
   CommandPlugin.Plugin,
   SkillPlugin.Plugin,
   VcsHgPlugin.Plugin,

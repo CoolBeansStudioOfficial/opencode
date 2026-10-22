@@ -301,10 +301,17 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
   const undo = actions.revert.undo
   const redo = actions.revert.redo
 
-  const compact = async () => {
+  // Fork: `/compact <focus>` saves the focus for the next compaction (core's compact-focus plugin reads and clears it).
+  const compact = async (_source?: string, focus?: string) => {
     const sessionID = actions.session.identity.params.id
 
     if (!sessionID) return
+    const info = data.session.get(sessionID)
+
+    if (focus?.trim() && info)
+      await serverSDK.api.session
+        .update({ sessionID, metadata: { ...info.metadata, compactFocus: focus.trim() } })
+        .catch(() => undefined)
 
     await data.session.compact({ sessionID, model: actions.model() }).catch((cause: unknown) => {
       showToast({ title: formatServerError(cause, language.t, language.t("common.requestFailed")) })
@@ -350,6 +357,7 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
       title: language.t("command.session.compact"),
       description: language.t("command.session.compact.description"),
       slash: "compact",
+      slashArguments: true,
       disabled: !actions.session.identity.params.id || actions.session.history.visibleUserMessages().length === 0,
       onSelect: compact,
     }),

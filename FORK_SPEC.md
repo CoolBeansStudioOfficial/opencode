@@ -63,7 +63,7 @@ Base: fork of [anomalyco/opencode](https://github.com/anomalyco/opencode) (MIT).
 | Git commit, push, PR, CI checks | Done | Git button in the session header |
 | Memory | Done | `~/.config/opencode/memory/`, injected into every session |
 | Scheduled tasks | Done | Settings → server → Scheduled tasks, or the `schedule` tool |
-| `/compact` focus hint | Not started | |
+| `/compact` focus hint | Done | `/compact <what to keep>`; not yet tested against a live model |
 | Design canvas | Not started | |
 | Browser pane on web/phone | Not planned | Electron-only by design |
 | CI auto-fix / background PR watcher | Not started | Checks refresh on demand |
