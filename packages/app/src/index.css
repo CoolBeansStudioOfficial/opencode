@@ -609,3 +609,8 @@
 [data-component="new-session-greeting"] {
   font-family: Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
 }
+
+/* Claude desktop: mode on the left under the card, model and effort on the right. */
+[data-slot="composer-below"] [data-slot="composer-controls"] > div > :nth-child(2) {
+  margin-inline-start: auto;
+}

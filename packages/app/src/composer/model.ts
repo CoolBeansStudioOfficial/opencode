@@ -104,7 +104,10 @@ export function createComposerModel(adapter: ComposerAdapter, options?: { queue?
     if (adapter.working() || (options?.queue?.count() ?? 0) > 0)
       return language.t("ui.promptInput.placeholder.followUp", { slash: "/", at: "@" })
 
-    return language.t("ui.promptInput.placeholder.normal", { slash: "/", at: "@" })
+    // Claude desktop: a short hint in a session, an invitation on the new-session screen.
+    return adapter.kind === "active-session"
+      ? language.t("composer.placeholder.session")
+      : language.t("composer.placeholder.new")
   }
 
   const historyComments = () => {

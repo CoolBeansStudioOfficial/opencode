@@ -331,54 +331,7 @@ export function ComposerEditor(props: ComposerEditorProps) {
               onShell={props.controller.openShell}
             />
           </div>
-          <div
-            ref={controlsViewport}
-            data-slot="composer-controls"
-            data-overflow-start={overflow.start}
-            data-overflow-end={overflow.end}
-            class="ms-1 me-3 h-full min-w-0 flex-1 overflow-x-auto overscroll-x-contain no-scrollbar"
-            onScroll={updateOverflow}
-            aria-hidden={state.mode === "shell"}
-            inert={state.mode === "shell" ? true : undefined}
-            style={buttons()}
-          >
-            <div ref={controlsContent} class="flex h-full w-max min-w-full items-center gap-1">
-              <Show when={view.permissionMode} keyed>
-                {(control) => (
-                  <ComposerEditorConfiguredSelect
-                    title={control.title()}
-                    keybind={["Shift", "Tab"]}
-                    control={control}
-                  />
-                )}
-              </Show>
-              <Show when={view.agent} keyed>
-                {(control) => (
-                  <ComposerEditorConfiguredSelect
-                    title={i18n.t("ui.promptInput.chooseAgent")}
-                    keybind={["Mod", "."]}
-                    control={control}
-                  />
-                )}
-              </Show>
-              <Show when={props.modelControlsVisible ?? true}>
-                {props.modelControl}
-                <Show when={view.variant} keyed>
-                  {(control) => (
-                    <Show when={control.options().length > 1}>
-                      <ComposerEditorConfiguredSelect
-                        mobileDrawer
-                        title={i18n.t("ui.promptInput.chooseVariant")}
-                        keybind={["Shift", "Mod", "D"]}
-                        control={control}
-                        class={control.current() === "default" ? "composer-variant-default" : undefined}
-                      />
-                    </Show>
-                  )}
-                </Show>
-              </Show>
-            </div>
-          </div>
+          <div class="min-w-0 flex-1" />
           <div data-slot="composer-actions" class="flex shrink-0 items-center">
             <Show when={state.mode === "normal"}>
               <ComposerEditorAlternateDelivery
@@ -416,6 +369,57 @@ export function ComposerEditor(props: ComposerEditorProps) {
           </div>
         </div>
       </form>
+      {/* Claude desktop keeps mode, model and effort under the card, not inside it. */}
+      <div data-slot="composer-below" class="flex min-h-8 items-center px-3 pt-1.5">
+      <div
+        ref={controlsViewport}
+        data-slot="composer-controls"
+        data-overflow-start={overflow.start}
+        data-overflow-end={overflow.end}
+        class="h-7 min-w-0 flex-1 overflow-x-auto overscroll-x-contain no-scrollbar"
+        onScroll={updateOverflow}
+        aria-hidden={state.mode === "shell"}
+        inert={state.mode === "shell" ? true : undefined}
+        style={buttons()}
+      >
+        <div ref={controlsContent} class="flex h-full w-max min-w-full items-center gap-1">
+          <Show when={view.permissionMode} keyed>
+            {(control) => (
+              <ComposerEditorConfiguredSelect
+                title={control.title()}
+                keybind={["Shift", "Tab"]}
+                control={control}
+              />
+            )}
+          </Show>
+          <Show when={view.agent} keyed>
+            {(control) => (
+              <ComposerEditorConfiguredSelect
+                title={i18n.t("ui.promptInput.chooseAgent")}
+                keybind={["Mod", "."]}
+                control={control}
+              />
+            )}
+          </Show>
+          <Show when={props.modelControlsVisible ?? true}>
+            {props.modelControl}
+            <Show when={view.variant} keyed>
+              {(control) => (
+                <Show when={control.options().length > 1}>
+                  <ComposerEditorConfiguredSelect
+                    mobileDrawer
+                    title={i18n.t("ui.promptInput.chooseVariant")}
+                    keybind={["Shift", "Mod", "D"]}
+                    control={control}
+                    class={control.current() === "default" ? "composer-variant-default" : undefined}
+                  />
+                </Show>
+              )}
+            </Show>
+          </Show>
+        </div>
+      </div>
+      </div>
     </div>
   )
 }

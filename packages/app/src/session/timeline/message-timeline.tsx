@@ -27,6 +27,7 @@ import { parseVoiceDelegation } from "./voice-delegation"
 import { useCommand } from "@/shell/commands/command"
 import { SessionAncestorTrail, SessionProjectMenu, SessionTitleHeader } from "../session-identity-header"
 import { SessionHeaderSpacer } from "@/session/header/session-header"
+import { SessionPaneButtons } from "@/session/header/session-pane-buttons"
 import { SessionRunningMenu } from "@/session/header/session-running-menu"
 import { SessionGitButton } from "@/session/git/git-dialog"
 
@@ -544,7 +545,7 @@ function MessageTimelineView(
                       >
                         <Menu.Trigger
                           as={IconButton}
-                          icon={<Icon name="outline-dots" />}
+                          icon={<Icon name="chevron-down" />}
                           variant="ghost-muted"
                           size="large"
                           class="shrink-0"
@@ -576,8 +577,22 @@ function MessageTimelineView(
                               </Menu.Item>
                             </Show>
                             <Show when={!parentID()}>
-                              {/* TODO: Need a session archive API. */}
                               <Menu.Separator />
+                              <Menu.Item
+                                onSelect={() => {
+                                  const current = server.ctx.data.session.get(id)
+
+                                  void server.ctx.sdk.api.session.update({ sessionID: id, archived: true }).then(() => {
+                                    if (current)
+                                      server.ctx.data.session.remember({
+                                        ...current,
+                                        time: { ...current.time, archived: Date.now() },
+                                      })
+                                  })
+                                }}
+                              >
+                                {language.t("sidebar.sessions.archive")}
+                              </Menu.Item>
                               <Menu.Item onSelect={() => props.action.showDelete(id)}>
                                 {language.t("common.delete")}…
                               </Menu.Item>
@@ -596,6 +611,7 @@ function MessageTimelineView(
                     <Show when={!parentID()}>
                       <SessionGitButton directory={() => props.view.directory} />
                     </Show>
+                    <SessionPaneButtons />
                     <ExtensionSlot
                       at="session.header"
                       input={{

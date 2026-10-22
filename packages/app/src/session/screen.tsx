@@ -35,6 +35,9 @@ import { TimelineSearchBar } from "./timeline/search-bar"
 import { ActiveSessionComposerRegion, createActiveSessionRegion } from "./composer/region"
 import { SessionIdentityHeader } from "./session-identity-header"
 import { SessionReviewToggle } from "./header/session-header-actions"
+import { SessionInfoColumn } from "./info/session-info-column"
+import { sessionInfo } from "./info/state"
+import { createMediaQuery } from "@solid-primitives/media"
 import { SessionRunningMenu } from "./header/session-running-menu"
 import { createAnimatedPresence } from "@/runtime/animated-presence"
 import { createTimelineCache } from "./timeline/cache"
@@ -67,6 +70,7 @@ function SessionScreenContent(props: {
   const attachment = useExtensionAttachment()
   const settings = useSettings()
   const isDesktop = session.isDesktop
+  const wide = createMediaQuery("(min-width: 1500px)")
   const bottomMobileTabs = () => settings.general.mobileTitlebarPosition() === "bottom"
   const sidebar = createPanelSidebar()
 
@@ -371,8 +375,8 @@ function SessionScreenContent(props: {
   )
 
   return (
-    <>
-      <div class="flex-1 min-h-0 flex flex-col gap-2 px-[var(--shell-inline-inset,8px)] pb-[var(--shell-bottom-inset,8px)] pt-[var(--shell-top-inset,8px)]">
+    <div class="flex min-h-0 min-w-0 flex-1 flex-row">
+      <div class="min-w-0 flex-1 min-h-0 flex flex-col gap-2 px-[var(--shell-inline-inset,8px)] pb-[var(--shell-bottom-inset,8px)] pt-[var(--shell-top-inset,8px)]">
         <div ref={screen.panel.ref} class="relative flex-1 min-h-0 flex flex-col md:flex-row gap-2">
           {/* Keep the control outside panel animations. */}
           <Show when={isDesktop() && messagesReady() && session.identity.params.id}>
@@ -594,6 +598,9 @@ function SessionScreenContent(props: {
           </div>
         </Show>
       </div>
-    </>
+      <Show when={isDesktop() && wide() && sessionInfo.open() && session.identity.params.id}>
+        {(id) => <SessionInfoColumn sessionID={id()} directory={session.data.info()?.location.directory} />}
+      </Show>
+    </div>
   )
 }

@@ -25,6 +25,8 @@ const SidebarSchema = Schema.Struct({
 
 export type SidebarGroup = { id: string; name: string; sessions: HomeSessionRecord[] }
 
+export type SidebarProject = { directory: string; name: string; sessions: HomeSessionRecord[] }
+
 export function createSessionsSidebar() {
   const home = createHomeController()
   const tabs = useTabs()
@@ -33,7 +35,7 @@ export function createSessionsSidebar() {
 
   const [state, setState] = persisted(Persist.global("sessions-sidebar"), SidebarSchema, {
     open: true,
-    width: 260,
+    width: 300,
     pinned: [],
     groups: [],
     collapsed: [],
@@ -110,6 +112,21 @@ export function createSessionsSidebar() {
 
   const recents = createMemo(() => visible().filter((record) => !grouped().has(key(record))))
 
+  // Claude desktop lists sessions under their project, most recently active project first.
+  const projectGroups = createMemo((): SidebarProject[] => {
+    const byDirectory = new Map<string, SidebarProject>()
+
+    recents().forEach((record) => {
+      const directory = record.project?.worktree ?? record.session.location.directory
+      const group = byDirectory.get(directory)
+
+      if (group) group.sessions.push(record)
+      else byDirectory.set(directory, { directory, name: record.projectName, sessions: [record] })
+    })
+
+    return [...byDirectory.values()]
+  })
+
   const active = createMemo(() => location.pathname.match(/\/session\/([^/]+)/)?.[1])
 
   // Subagent sessions nest under their parent. Expanding a row loads its children; the active session's
@@ -157,9 +174,27 @@ export function createSessionsSidebar() {
     pinned,
     groups,
     recents,
+    projectGroups,
     active,
     children,
     running: (sessionID: string) => home.server.focusedContext()?.data.session.status(sessionID) === "running",
+    needsInput: (sessionID: string) => {
+      const data = home.server.focusedContext()?.data.session
+
+      return (data?.permission.list(sessionID)?.length ?? 0) > 0 || (data?.form.list(sessionID)?.length ?? 0) > 0
+    },
+    archive: async (record: HomeSessionRecord) => {
+      const ctx = home.server.focusedContext()
+
+      if (!ctx) return
+      await ctx.sdk.api.session.update({ sessionID: record.session.id, archived: true })
+      ctx.data.session.remember({ ...record.session, time: { ...record.session.time, archived: Date.now() } })
+    },
+    newSessionIn: (directory: string) => {
+      const conn = home.server.focused()
+
+      if (conn) home.project.openProjectNewSession(conn, directory)
+    },
     isExpanded: (sessionID: string) => expanded().has(sessionID),
     toggleExpanded: (sessionID: string) => {
       const next = new Set(expanded())

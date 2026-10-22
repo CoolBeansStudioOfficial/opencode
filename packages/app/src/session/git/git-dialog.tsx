@@ -38,7 +38,7 @@ export function SessionGitButton(props: { directory: () => string | undefined })
 
 const bucketOrder = { fail: 0, pending: 1, cancel: 2, skipping: 3, pass: 4 } satisfies Record<GitActions.Check["bucket"], number>
 
-function GitDialog(props: { directory: string }) {
+export function GitDialog(props: { directory: string }) {
   const language = useLanguage()
   const platform = usePlatform()
   const sdk = useServerSDK()
