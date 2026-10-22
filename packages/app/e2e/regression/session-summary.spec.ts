@@ -305,7 +305,7 @@ for (const direction of ["ltr", "rtl"] as const) {
     await expectAlignedWithHeader(page, direction)
 
     const mcp = summary.getByRole("button", { name: "MCP", exact: true })
-    const submenu = page.getByRole("dialog", { name: "MCP", exact: true })
+    const submenu = page.getByRole("group", { name: "MCP", exact: true })
     await mcp.click()
     await expect(submenu.getByText("No MCP servers configured", { exact: true })).toBeVisible()
     await expect(submenu.getByText("Configuration file")).toBeVisible()
@@ -326,12 +326,12 @@ for (const direction of ["ltr", "rtl"] as const) {
       ["LSP", "No LSP servers configured"],
     ]) {
       await summary.getByRole("button", { name, exact: true }).click()
-      await expect(page.getByRole("dialog", { name, exact: true }).getByText(empty, { exact: true })).toBeVisible()
+      await expect(page.getByRole("group", { name, exact: true }).getByText(empty, { exact: true })).toBeVisible()
       await expect(submenu).toBeHidden()
     }
 
     await page.keyboard.press("Escape")
-    await expect(page.getByRole("dialog", { name: "LSP", exact: true })).toBeHidden()
+    await expect(page.getByRole("group", { name: "LSP", exact: true })).toBeHidden()
     await page.keyboard.press("Escape")
     await expect(summary).toBeHidden()
 
@@ -414,7 +414,7 @@ test("summary catalogs load, refresh while cached, and tell errors from empty", 
   await page.goto(sessionHref(fixture.targetID))
   await page.getByRole("button", { name: "Session details", exact: true }).click()
   const summary = page.getByRole("dialog", { name: "Session details", exact: true })
-  const menu = (name: string) => page.getByRole("dialog", { name, exact: true })
+  const menu = (name: string) => page.getByRole("group", { name, exact: true })
 
   const open = async (name: string) => {
     const item = summary.getByRole("button", { name, exact: true })
@@ -436,7 +436,13 @@ test("summary catalogs load, refresh while cached, and tell errors from empty", 
   await menu("Plugins").getByRole("button", { name: "Retry", exact: true }).click()
   await expect(menu("Plugins").getByText("supermemory", { exact: true })).toBeVisible()
   await expect(menu("Plugins").getByText("builtin", { exact: true })).toHaveCount(0)
-  await expect(menu("Plugins").getByTitle("Plugin failed to activate")).toContainText("Failed")
+  // The dot is the status: a failed plugin's dot shows its error on hover.
+  await menu("Plugins")
+    .locator(".session-service-row")
+    .filter({ hasText: "broken-plugin" })
+    .locator(".session-service-dot")
+    .hover()
+  await expect(page.getByRole("tooltip")).toHaveText("Plugin failed to activate")
   expect(pluginDirectories.length).toBeGreaterThan(1)
   expect(pluginDirectories.every((directory) => directory === fixture.directory)).toBe(true)
 
@@ -445,7 +451,6 @@ test("summary catalogs load, refresh while cached, and tell errors from empty", 
   await expect(menu("Skills").getByText("review-animations", { exact: true })).toBeVisible()
   await expect(menu("Plugins")).toBeHidden()
   await open("LSP")
-  await expect(menu("LSP").getByText("Configured LSPs", { exact: true })).toBeVisible()
   await expect(menu("LSP").getByText("typescript", { exact: true })).toBeVisible()
   await expect(menu("LSP").getByText("rust", { exact: true })).toHaveCount(0)
   await expect(menu("LSP").locator(".session-service-dot")).toHaveCount(0)
@@ -503,7 +508,7 @@ test("MCP rows toggle once per action and keep sign-in, errors, and management a
   await page.getByRole("button", { name: "Session details", exact: true }).click()
   const item = page.getByRole("button", { name: "MCP", exact: true })
   await item.click()
-  const submenu = page.getByRole("dialog", { name: "MCP", exact: true })
+  const submenu = page.getByRole("group", { name: "MCP", exact: true })
   await expect(submenu).toBeVisible()
 
   const row = (name: string) =>
@@ -511,23 +516,22 @@ test("MCP rows toggle once per action and keep sign-in, errors, and management a
 
   const connected = submenu.getByRole("switch", { name: "figma", exact: true })
   const disabled = submenu.getByRole("switch", { name: "off", exact: true })
-  await expect(submenu.getByRole("switch")).toHaveCount(3)
+  await expect(submenu.getByRole("switch")).toHaveCount(4)
   await expect(submenu.locator(".session-service-dot")).toHaveCount(5)
   await expect(connected).toBeChecked()
   await expect(disabled).not.toBeChecked()
   await expect(submenu.getByRole("switch", { name: "waiting", exact: true })).toBeDisabled()
   await expect(submenu.getByRole("switch", { name: "waiting", exact: true })).toHaveAccessibleDescription("Connecting…")
-  await expect(row("figma").getByText("Connected", { exact: true })).toBeVisible()
-  await expect(
-    row("waiting").locator('[data-slot="switch-label"]').getByText("Connecting…", { exact: true }),
-  ).toBeVisible()
-  await expect(row("off").getByText("Disabled", { exact: true })).toBeVisible()
+  // The dot is the status; the words are for assistive technology only.
+  await expect(connected).toHaveAccessibleDescription("Connected")
+  await expect(disabled).toHaveAccessibleDescription("Disabled")
+  await expect(submenu.getByRole("switch", { name: "playwright", exact: true })).toHaveAccessibleDescription("Failed")
   await expect(submenu.getByRole("button", { name: "Sign in to linear", exact: true })).toBeVisible()
-  await expect(row("playwright").getByText("Failed", { exact: true })).toBeVisible()
+  await expect(submenu.getByRole("button", { name: "Details for playwright", exact: true })).toBeVisible()
   await expect
     .poll(async () => {
-      const [heading, dot, label] = await Promise.all([
-        submenu.getByText("Configured MCP servers", { exact: true }).evaluate((element) => {
+      const [inset, dot, label] = await Promise.all([
+        row("figma").evaluate((element) => {
           const bounds = element.getBoundingClientRect()
           const style = getComputedStyle(element)
 
@@ -548,14 +552,14 @@ test("MCP rows toggle once per action and keep sign-in, errors, and management a
       return {
         width: dot.width,
         height: dot.height,
-        alignment: heading.rtl ? heading.start - dot.x - dot.width : dot.x - heading.start,
-        gap: heading.rtl ? dot.x - label.x - label.width : label.x - dot.x - dot.width,
+        alignment: inset.rtl ? inset.start - dot.x - dot.width : dot.x - inset.start,
+        gap: inset.rtl ? dot.x - label.x - label.width : label.x - dot.x - dot.width,
       }
     })
     .toEqual({ width: 6, height: 6, alignment: 0, gap: 8 })
   await page.screenshot({ path: test.info().outputPath("mcp-toggles.png"), animations: "disabled" })
 
-  for (const [index, target] of ["label", "dot", "padding", "control", "status", "keyboard"].entries()) {
+  for (const [index, target] of ["label", "dot", "padding", "control", "keyboard"].entries()) {
     await expect(connected).toBeEnabled()
 
     const pending =
@@ -571,11 +575,6 @@ test("MCP rows toggle once per action and keep sign-in, errors, and management a
 
     if (target === "control") await row("figma").locator('[data-slot="switch-control"]').click()
 
-    if (target === "status")
-      await row("figma")
-        .getByText(index % 2 === 0 ? "Connected" : "Disabled", { exact: true })
-        .click()
-
     if (target === "keyboard") await connected.press("Space")
 
     if (pending) {
@@ -586,7 +585,7 @@ test("MCP rows toggle once per action and keep sign-in, errors, and management a
 
     await expect(connected).toBeChecked({ checked: index % 2 !== 0 })
     await expect(connected).toBeEnabled()
-    await expect(row("figma").getByText(index % 2 !== 0 ? "Connected" : "Disabled", { exact: true })).toBeVisible()
+    await expect(connected).toHaveAccessibleDescription(index % 2 !== 0 ? "Connected" : "Disabled")
     await expect(submenu).toBeVisible()
     expect(writes).toEqual(
       Array.from(
@@ -601,11 +600,74 @@ test("MCP rows toggle once per action and keep sign-in, errors, and management a
   await expect(disabled).toBeChecked()
   await expect(disabled).toBeEnabled()
   expect(writes.at(-1)).toBe("/api/experimental/mcp/off/connect")
-  expect(writes).toHaveLength(7)
+  expect(writes).toHaveLength(6)
 
   await submenu.getByRole("button", { name: "Manage MCP servers", exact: true }).click()
   await expect(page.getByRole("dialog").getByText("MCPs", { exact: true })).toBeVisible()
   await expect(submenu).toBeHidden()
+})
+
+test("Extensions lists open on hover, hold course into the open list, and follow the keyboard", async ({ page }) => {
+  await mockStressTimeline(page, {
+    mcp: [{ name: "figma", status: { status: "connected" } }],
+    plugins: [
+      {
+        id: "supermemory",
+        source: { type: "package", target: "opencode-supermemory" },
+        features: {},
+        state: { status: "active" },
+      },
+    ],
+  })
+  await page.goto(sessionHref(fixture.targetID))
+  await page.getByRole("button", { name: "Session details", exact: true }).click()
+  const summary = page.getByRole("dialog", { name: "Session details", exact: true })
+  const row = (name: string) => summary.getByRole("button", { name, exact: true })
+  const list = (name: string) => page.getByRole("group", { name, exact: true })
+
+  // Hovering opens a list without a click, and moving down the rows switches lists.
+  await row("MCP").hover()
+  await expect(row("MCP")).toHaveAttribute("aria-expanded", "true")
+  await expect(list("MCP").getByRole("switch", { name: "figma", exact: true })).toBeVisible()
+  await row("Plugins").hover()
+  await expect(list("Plugins").getByText("supermemory", { exact: true })).toBeVisible()
+  await expect(list("MCP")).toBeHidden()
+  await row("MCP").hover()
+  await expect(list("MCP")).toBeVisible()
+
+  // A diagonal move from MCP into its list crosses the Plugins row without switching to it.
+  const from = (await row("MCP").boundingBox())!
+  const into = (await list("MCP").boundingBox())!
+  await page.mouse.move(into.x + into.width - 24, from.y + from.height * 3, { steps: 12 })
+  await expect(row("MCP")).toHaveAttribute("aria-expanded", "true")
+  await expect(row("Plugins")).toHaveAttribute("aria-expanded", "false")
+  await expect(list("MCP")).toBeVisible()
+
+  // A pointer that comes to rest on Plugins while still heading for the list switches to Plugins.
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2)
+  const plugins = (await row("Plugins").boundingBox())!
+  await page.mouse.move(plugins.x + 12, plugins.y + plugins.height / 2, { steps: 6 })
+  await expect(list("Plugins")).toBeVisible()
+
+  // The keyboard opens a list into its first control and closes it back to its row; Escape closes only the list.
+  await page.mouse.move(0, 0)
+  await page.keyboard.press("Escape")
+  await expect(list("Plugins")).toBeHidden()
+  await expect(summary).toBeVisible()
+  await row("MCP").focus()
+  await page.keyboard.press("ArrowRight")
+  await expect(list("MCP").getByRole("switch", { name: "figma", exact: true })).toBeFocused()
+  await page.keyboard.press("ArrowLeft")
+  await expect(list("MCP")).toBeHidden()
+  await expect(row("MCP")).toBeFocused()
+  await page.keyboard.press("Enter")
+  await expect(list("MCP").getByRole("switch", { name: "figma", exact: true })).toBeFocused()
+  await page.keyboard.press("Escape")
+  await expect(list("MCP")).toBeHidden()
+  await expect(row("MCP")).toBeFocused()
+  await expect(summary).toBeVisible()
+  await page.keyboard.press("Escape")
+  await expect(summary).toBeHidden()
 })
 
 test("multiple desktop connections show the session's server name", async ({ page }) => {
@@ -669,7 +731,7 @@ test.describe("remote configuration", () => {
       await trigger.click()
       const item = summary.getByRole("button", { name: service.name, exact: true })
       await item.click()
-      const menu = page.getByRole("dialog", { name: service.name, exact: true })
+      const menu = page.getByRole("group", { name: service.name, exact: true })
       await expect(menu).toBeVisible()
       const copy = menu.getByRole("button", { name: "Copy configuration file path", exact: true })
       await expect(tooltip).toHaveCount(0)
@@ -700,10 +762,10 @@ test.describe("remote configuration", () => {
     await trigger.click()
     const skills = summary.getByRole("button", { name: "Skills", exact: true })
     await skills.click()
-    await expect(page.getByRole("dialog", { name: "Skills", exact: true })).toBeVisible()
+    await expect(page.getByRole("group", { name: "Skills", exact: true })).toBeVisible()
 
     const copy = page
-      .getByRole("dialog", { name: "Skills", exact: true })
+      .getByRole("group", { name: "Skills", exact: true })
       .getByRole("button", { name: "Copy configuration file path", exact: true })
 
     await copy.click()
@@ -726,7 +788,7 @@ test("long MCP lists stay in the viewport in a real RTL locale", async ({ page }
   await page.getByRole("button", { name: "פרטי ההפעלה", exact: true }).click()
   const summary = page.getByRole("dialog", { name: "פרטי ההפעלה", exact: true })
   await summary.getByRole("button", { name: "MCP", exact: true }).click()
-  const menu = page.getByRole("dialog", { name: "MCP", exact: true })
+  const menu = page.getByRole("group", { name: "MCP", exact: true })
   await expect(menu.locator(".session-mcp-row")).toHaveCount(30)
   await expect.poll(() => menu.evaluate((element) => element.scrollHeight > element.clientHeight)).toBe(true)
   await expect
@@ -776,7 +838,7 @@ async function expectAlignedWithHeader(page: Page, direction: "ltr" | "rtl") {
 
 // Reopens a service submenu while its next catalog request is held: the cached content stays, marked busy.
 async function expectRefreshKeeps(page: Page, name: string, path: string, content: string) {
-  const menu = page.getByRole("dialog", { name, exact: true })
+  const menu = page.getByRole("group", { name, exact: true })
   const summary = page.getByRole("dialog", { name: "Session details", exact: true })
   const label = menu.getByText(content, { exact: true }).and(menu.locator(":not(.sr-only)")).filter({ visible: true })
   await page.keyboard.press("Escape")

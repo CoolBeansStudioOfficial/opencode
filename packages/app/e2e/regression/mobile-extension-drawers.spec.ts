@@ -43,7 +43,7 @@ for (const scheme of ["light", "dark"] as const) {
         await expect(page.getByRole("dialog")).toHaveCount(1)
         await expect(page.locator('[data-slot="mobile-drawer-overlay"]')).toHaveCount(1)
         await expect(extension.getByRole("button", { name: "Close", exact: true })).toHaveCount(0)
-        await expect(extension.locator(".session-service-menu")).toHaveCount(0)
+        await expect(extension.locator(".session-service-flyout")).toHaveCount(0)
         await expect(extension).toBeInViewport({ ratio: 1 })
         await extension.getByRole("button", { name: "Navigate back", exact: true }).click()
         await expect(details.getByRole("button", { name: "MCP", exact: true })).toBeVisible()

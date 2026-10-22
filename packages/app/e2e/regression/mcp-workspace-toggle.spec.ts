@@ -48,7 +48,7 @@ async function open(
 
   const panel =
     input.surface === "popover"
-      ? page.getByRole("dialog", { name: "MCP", exact: true })
+      ? page.getByRole("group", { name: "MCP", exact: true })
       : page.getByRole("dialog", { name: "MCPs", exact: true })
 
   const show = async () => {
@@ -122,10 +122,9 @@ test("the MCP popover shows a failed server and reconnects it from its details",
   })
 
   const row = view.panel.locator(".session-mcp-row").filter({ hasText: "figma-desktop" })
-  await expect(view.toggle).toHaveCount(0)
-  await expect(row.getByText("Failed", { exact: true })).toBeVisible()
-  const failed = view.panel.getByRole("button", { name: "Details for figma-desktop", exact: true })
-  await expect(failed).toHaveText("Details")
+  // The red dot is the status, and opens the error.
+  await expect(view.toggle).toHaveAccessibleDescription("Failed")
+  const failed = row.getByRole("button", { name: "Details for figma-desktop", exact: true })
   view.requests.length = 0
   await failed.click()
   const details = page.getByRole("dialog", { name: "figma-desktop", exact: true })
@@ -138,7 +137,7 @@ test("the MCP popover shows a failed server and reconnects it from its details",
   ])
 
   if (!(await view.panel.isVisible())) await view.show()
-  await expect(row.getByText("Connected", { exact: true })).toBeVisible()
+  await expect(view.toggle).toHaveAccessibleDescription("Connected")
 })
 
 for (const surface of ["dialog"] as const) {
@@ -280,12 +279,9 @@ for (const surface of ["popover", "dialog"] as const) {
 
     if (surface === "dialog") await expect(view.toggle).toBeChecked()
     else
-      await expect(
-        view.panel
-          .locator(".session-mcp-row")
-          .filter({ hasText: "figma-desktop" })
-          .getByText("Connected", { exact: true }),
-      ).toBeVisible()
+      await expect(view.panel.getByRole("switch", { name: "figma-desktop", exact: true })).toHaveAccessibleDescription(
+        "Connected",
+      )
     await expect(view.panel.getByRole("button", { name: "Sign in to figma-desktop", exact: true })).toHaveCount(0)
   })
 }
@@ -316,7 +312,11 @@ for (const surface of ["popover", "dialog"] as const) {
         .locator(surface === "dialog" ? '[role="option"]' : ".session-mcp-row")
         .filter({ hasText: name })
 
-      const status = row.getByText(["Connected", "Disabled", "Failed", "Sign in"][index], { exact: true })
+      // The popover's dot is the status, so the control beside the name must stay whole.
+      const status =
+        surface === "dialog" || index === 3
+          ? row.getByText(["Connected", "Disabled", "Failed", "Sign in"][index], { exact: true })
+          : row.locator('[data-slot="switch-control"]')
 
       await expect(status).toBeVisible()
       await expect

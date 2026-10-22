@@ -41,7 +41,18 @@ function DetailsPopover(
   // Cached timelines remain mounted; only the visible details own the command. It leaves with this component.
   // A shortcut opens the popover without clicking its trigger.
   let trigger: HTMLButtonElement | undefined
-  const self = { trigger: () => trigger, toggle: () => props.onOpenChange(!props.open) }
+  // How the popover last opened: a pointer open focuses the popover itself, so its first row shows no focus ring
+  // beside the row the pointer opens.
+  const opening = { pointer: false }
+
+  const self = {
+    trigger: () => trigger,
+    toggle: () => {
+      opening.pointer = false
+      props.onOpenChange(!props.open)
+    },
+  }
+
   props.menus.add(self)
   onCleanup(() => props.menus.delete(self))
 
@@ -84,14 +95,29 @@ function DetailsPopover(
           state={props.open ? "pressed" : undefined}
           aria-label={ctx.t("title")}
           aria-expanded={props.open}
+          onPointerDown={() => (opening.pointer = true)}
+          onKeyDown={() => (opening.pointer = false)}
         />
       </Tooltip>
       <Popover.Portal>
+        {/* Kobalte positions the content relatively, so it places the Extensions flyout. Only the inner box scrolls,
+            so the flyout beside it is not clipped. */}
         <Popover.Content
-          class="session-summary-popover z-50 max-h-[calc(100dvh-96px)] overflow-y-auto border-0 bg-transparent p-1 outline-none"
+          class="session-summary-popover z-50 border-0 bg-transparent outline-none"
           aria-label={ctx.t("title")}
+          // Keys pressed in the popover, Escape included, stay out of the session view's shortcuts.
+          data-prevent-autofocus
+          onOpenAutoFocus={(event: Event) => {
+            if (!opening.pointer) return
+            event.preventDefault()
+
+            const content = event.currentTarget
+
+            // Deferred like Kobalte's own autofocus, which runs once the content is in the document.
+            if (content instanceof HTMLElement) setTimeout(() => content.focus({ preventScroll: true }))
+          }}
         >
-          {props.children}
+          <div class="max-h-[calc(100dvh-96px)] overflow-y-auto p-1">{props.children}</div>
         </Popover.Content>
       </Popover.Portal>
     </Popover>
