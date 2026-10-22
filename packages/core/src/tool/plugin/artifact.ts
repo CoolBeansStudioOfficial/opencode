@@ -10,12 +10,14 @@ import { ToolFailure } from "@opencode/ai"
 import { Effect, Schema } from "effect"
 import { Environment } from "../../environment/index.js"
 import { FileAccess } from "../../file-access.js"
+import { ArtifactsRegistry } from "../../plugin/artifacts.js"
+import path from "node:path"
 
 export const name = "artifact"
 
-export const description = `Show a file you created to the user in a side panel next to the chat. Use it for pages, reports, diagrams, slide decks and other results the user should look at, not for source files they only need to know about.
+export const description = `Show a file you created to the user in a side panel next to the chat, and keep it in their Artifacts gallery (with version history) like a Claude artifact. Create an artifact whenever the result is a self-contained deliverable the user will look at, use or keep: a web page or interactive tool, a report or document, a diagram, a slide deck, a chart or table. Don't use it for source files they only need to know about, or for short answers that belong in the chat. For UI or web design work in a project, use a design (below) so the user sees the real pages.
 
-Write the file first with the write tool, then call this with its path. The panel re-renders when you edit the file, so call it once per artifact.
+Write the file first with the write tool (a new file in the project's artifacts/ folder is a good default), then call this with its path. The panel re-renders when you edit the file and every edit becomes a version the user can restore, so call it once per artifact and keep editing the same file instead of creating copies. The user can also comment on any part of it from the panel; those comments reach you as messages.
 
 Renders:
 - .md: documents. Mermaid code blocks render as diagrams.
@@ -53,6 +55,9 @@ export const Plugin = {
   effect: Effect.fn("ArtifactTool.Plugin")(function* (ctx: Context) {
     const access = yield* FileAccess.Service
     const environment = yield* Environment.Service
+    const registry = ArtifactsRegistry.make(ctx)
+
+    yield* ArtifactsRegistry.register(ctx).pipe(Effect.orDie)
 
     yield* ctx.tool
       .transform((editor) =>
@@ -62,7 +67,7 @@ export const Plugin = {
           description,
           input: Input,
           output: Output,
-          execute: (input) =>
+          execute: (input, context) =>
             Effect.gen(function* () {
               const target = yield* access.resolve({ path: input.path, kind: "file" })
               const info = yield* environment.files.stat(target.absolute).pipe(
@@ -72,6 +77,13 @@ export const Plugin = {
               )
               if (info.type !== "file") return yield* new ToolFailure({ message: `${target.resource} is not a file` })
               const title = input.title?.trim() || target.resource.split(/[\\/]/).pop() || target.resource
+              const session = yield* ctx.session.get({ sessionID: context.sessionID }).pipe(Effect.option)
+              yield* registry.record({
+                path: target.absolute,
+                directory: session._tag === "Some" ? session.value.location.directory : path.dirname(target.absolute),
+                title: input.title?.trim() || undefined,
+                sessionID: context.sessionID,
+              })
               return {
                 output: { path: target.absolute, resource: target.resource, title },
                 content: `Showing ${target.resource} to the user in the side panel.`,
